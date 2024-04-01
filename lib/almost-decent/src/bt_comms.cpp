@@ -3,6 +3,11 @@
 #include <NimBLEHIDDevice.h>
 #include "bt_comms.h"
 
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <string>
+
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 static NimBLEUUID dataUuid("180a");
 
@@ -89,11 +94,23 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
     pCharacteristic->setValue(count++);
   };
 
+  void printHex(const char *str)
+  {
+    // Print string as hexadecimal
+    for (size_t i = 0; str[i] != '\0'; ++i)
+    {
+      std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(str[i]);
+    }
+    std::cout << std::endl;
+  }
+
   void onWrite(NimBLECharacteristic *pCharacteristic)
   {
     Serial.print(pCharacteristic->getUUID().toString().c_str());
     Serial.print(": onWrite(), value: ");
-    Serial.println(pCharacteristic->getValue().c_str());
+    // Serial.printf("0x%s\n", pCharacteristic->getValue().c_str());
+    printHex(pCharacteristic->getValue().c_str());
+    // std::cout << std::hex << pCharacteristic->getValue().data() << std::endl;
   };
   /** Called before notification or indication is sent,
    *  the value can be changed here before sending if desired.
