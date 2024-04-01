@@ -1,0 +1,6 @@
+{
+  "name": "almost-decent",
+  "dependencies": {
+    "h2zero/NimBLE-Arduino": "*"
+  }
+}
