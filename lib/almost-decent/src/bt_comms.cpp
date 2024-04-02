@@ -2,18 +2,15 @@
 #include <NimBLEServer.h>
 #include <NimBLEHIDDevice.h>
 #include "bt_comms.h"
+#include "bt_messages.h"
+#include "bt_message_building.h"
 
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <string>
 
-#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-static NimBLEUUID dataUuid("180a");
-
 static NimBLEServer *pServer;
-
-const char *weightCharacteristicId = "0000FFF4-0000-1000-8000-00805F9B34FB";
 
 static int count = 1;
 
@@ -50,38 +47,19 @@ class ServerCallbacks : public NimBLEServerCallbacks
   {
     Serial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
   };
-
-  /********************* Security handled here **********************
-  ****** Note: these are the same return values as defaults ********/
-  uint32_t onPassKeyRequest()
-  {
-    Serial.println("Server Passkey Request");
-    /** This should return a random 6 digit number for security
-     *  or make your own static passkey as done here.
-     */
-    return 123456;
-  };
-
-  bool onConfirmPIN(uint32_t pass_key)
-  {
-    Serial.print("The passkey YES/NO number: ");
-    Serial.println(pass_key);
-    /** Return false if passkeys don't match. */
-    return true;
-  };
-
-  void onAuthenticationComplete(ble_gap_conn_desc *desc)
-  {
-    /** Check that encryption was successful, if not we disconnect the client */
-    if (!desc->sec_state.encrypted)
-    {
-      NimBLEDevice::getServer()->disconnect(desc->conn_handle);
-      Serial.println("Encrypt connection failed - disconnecting client");
-      return;
-    }
-    Serial.println("Starting BLE work!");
-  };
 };
+
+void printHex(const char *str, bool endline = true)
+{
+  // Print string as hexadecimal
+  for (size_t i = 0; str[i] != '\0'; ++i)
+  {
+    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(str[i]);
+  }
+  if (endline) {
+    std::cout << std::endl;
+  }
+}
 
 /** Handler class for characteristic actions */
 class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
@@ -94,30 +72,18 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
     pCharacteristic->setValue(count++);
   };
 
-  void printHex(const char *str)
-  {
-    // Print string as hexadecimal
-    for (size_t i = 0; str[i] != '\0'; ++i)
-    {
-      std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(str[i]);
-    }
-    std::cout << std::endl;
-  }
-
   void onWrite(NimBLECharacteristic *pCharacteristic)
   {
     Serial.print(pCharacteristic->getUUID().toString().c_str());
     Serial.print(": onWrite(), value: ");
-    // Serial.printf("0x%s\n", pCharacteristic->getValue().c_str());
     printHex(pCharacteristic->getValue().c_str());
-    // std::cout << std::hex << pCharacteristic->getValue().data() << std::endl;
   };
   /** Called before notification or indication is sent,
    *  the value can be changed here before sending if desired.
    */
   void onNotify(NimBLECharacteristic *pCharacteristic)
   {
-    Serial.println("Sending notification to clients");
+    // Serial.println("Sending notification to clients");
   };
 
   /** The status returned in status is defined in NimBLECharacteristic.h.
@@ -131,7 +97,7 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
     str += code;
     str += ", ";
     str += NimBLEUtils::returnCodeToString(code);
-    Serial.println(str);
+    // Serial.println(str);
   };
 
   void onSubscribe(NimBLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue)
@@ -162,8 +128,41 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
   };
 };
 
+class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic *pCharacteristic)
+  {
+    // special write char handling
+    Serial.print(pCharacteristic->getUUID().toString().c_str());
+    Serial.print(": onWrite(), value: ");
+    NimBLEAttValue val = pCharacteristic->getValue();
+    printHex(val.c_str());
+
+    if (val.length() < 4 || val.data()[0] != DecentHeader) {
+      return;
+    }
+    const uint8_t *data = val.data();
+    switch (data[2]) {
+      case BT_Command::LED:
+        Serial.print("LED CMD");
+        break;
+      case BT_Command::TIMER:
+        Serial.print("TIMER CMD");
+        break;
+      case BT_Command::TARE:
+        Serial.print("TARE CMD");
+        break;
+    }
+    char payload[3];
+    payload[0] = data[3];
+    payload[1] = data[4];
+    payload[2] = '\0';
+    Serial.print(": ");
+    printHex(payload);
+  };
+};
+
 static CharacteristicCallbacks weightCharacteristicCallbacks;
-static CharacteristicCallbacks writeCharacteristicCallbacks;
+static WriteCharacteristicCallbacks writeCharacteristicCallbacks;
 
 void initBT()
 {
@@ -207,4 +206,33 @@ void initBT()
   pAdvertising->start();
 
   Serial.println("Advertising Started");
+}
+
+
+void broadcastWeight(int gramsMultipliedByTen) {
+  NimBLEService *scaleService = pServer->getServiceByUUID("FFF0");
+  if (scaleService == NULL) {
+    Serial.println("No service running, aborting");
+    return;
+  }
+
+  NimBLECharacteristic *weightCharacteristic = scaleService->getCharacteristic("FFF4");
+
+  if (weightCharacteristic == NULL) {
+    Serial.println("No weight characteristic found, aborting");
+    return;
+  }
+
+  uint32_t time = millis();
+  int minutes = time / 1000 / 60;
+  int seconds = time / 1000 - (minutes * 60);
+  int milliseconds = time - (seconds * 1000) - (minutes * 60 * 1000);
+  std::vector<uint8_t> message = buildWeightMessage(gramsMultipliedByTen, minutes, seconds, milliseconds);
+
+  weightCharacteristic->setValue(message);
+  if (weightCharacteristic->getSubscribedCount() > 0) {
+    Serial.println("notifying");
+    weightCharacteristic->notify();
+  }
+  
 }
