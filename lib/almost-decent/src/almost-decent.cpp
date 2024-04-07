@@ -109,6 +109,7 @@ void AlmostDecentScale::tick()
     /* calibration code */
     break;
   case ScaleState::measuring:
+  {
     long currentMillis = millis();
     if (currentMillis - m_internal->m_last_broadcast_millis < 100)
     {
@@ -117,7 +118,8 @@ void AlmostDecentScale::tick()
     float weight = m_internal->m_scale.get_units(5);
     sendWeight((int)weight * 10);
     m_internal->m_last_broadcast_millis = currentMillis;
-    break;
+  }
+  break;
   default:
     break;
   }
