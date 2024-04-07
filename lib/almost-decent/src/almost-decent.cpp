@@ -77,17 +77,17 @@ void AlmostDecentScale::calibration()
   almostDecentLog(this, "starting calibration, please wait for tare");
   m_internal->m_state = ScaleState::calibrating;
   m_internal->m_scale.set_scale();
-
+  delay(5000);
   m_internal->m_scale.tare(100);
   delay(1000);
   almostDecentLog(this, "add a known weight");
-  delay(1000);
-  float units = m_internal->m_scale.get_units(20);
+  delay(5000);
+  float units = m_internal->m_scale.get_units(10);
   char msg[50];
-  snprintf(msg, 49, "factor is: %f", units);
+  snprintf(msg, 49, "units value is: %f", units);
   almostDecentLog(this, msg);
   delay(2000);
-  almostDecentLog(this, "waiting for set factor");
+  almostDecentLog(this, "waiting for set factor (units/known_weight)");
 }
 
 void AlmostDecentScale::setFactor(float factor)
