@@ -1,15 +1,15 @@
 #ifndef ALMOST_DECENT_H
 #define ALMOST_DECENT_H
 
-// HX711 scale;
-// static NimBLEServer *pServer;
+#include <functional>
 
 enum ScaleState : unsigned char
 {
   startup,
+  ready,
   calibrating,
   measuring,
-  tare
+  error
 };
 
 class AlmostDecent_;
@@ -19,9 +19,12 @@ class AlmostDecentScale {
     AlmostDecent_ *m_internal;
   public: 
   AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin);
+  std::function<void(const char *)> m_logCallback = nullptr;
   ScaleState getState();
   void begin(bool ownThread = true); // creates own thread for processing
   void tick(); // not using own thread
+  void calibration();
+  void setFactor(float factor);
 };
 
 

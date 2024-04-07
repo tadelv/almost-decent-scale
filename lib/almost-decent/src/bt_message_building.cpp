@@ -9,11 +9,6 @@
 #include <iterator>
 #include <vector>
 
-unsigned char xorFunction(unsigned char a, unsigned char b)
-{
-  return a ^ b;
-}
-
 std::vector<unsigned char> buildWeightMessage(int weight, int minutes, int seconds, int milliseconds)
 {
   std::vector<unsigned char> message;

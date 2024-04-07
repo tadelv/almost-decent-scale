@@ -1,6 +1,10 @@
 {
   "name": "almost-decent",
   "dependencies": {
-    "h2zero/NimBLE-Arduino": "*"
-  }
+    "h2zero/NimBLE-Arduino": "*",
+    "HX711": "*"
+  },
+  "exclude": [
+    "*_internal*"
+  ]
 }
