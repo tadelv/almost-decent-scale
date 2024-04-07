@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <almost-decent.h>
 
-const int LOADCELL_DOUT_PIN = 2;
-const int LOADCELL_SCK_PIN = 3;
+const int LOADCELL_DOUT_PIN = 20;
+const int LOADCELL_SCK_PIN = 19;
 
 AlmostDecentScale scale(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
@@ -13,8 +13,6 @@ void scaleLog(const char *message) {
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting NimBLE Server");
-  // pServer = NimBLEDevice::createServer();
-  // scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
   scale.m_logCallback = scaleLog;
   scale.begin();
   if (scale.getState() == ScaleState::error) {
