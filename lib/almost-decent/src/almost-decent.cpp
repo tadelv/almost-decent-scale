@@ -21,6 +21,13 @@ class AlmostDecent_ {
     m_scale.begin(m_doutPin, m_sckPin);
     return m_scale.wait_ready_retry(3, 1000);
   }
+
+  void btTareCallback() {
+    if (m_scale.is_ready() == false) {
+      return;
+    }
+    m_scale.tare();
+  }
 };
 
 void initBluetooth() {
@@ -70,6 +77,9 @@ void AlmostDecentScale::begin(bool ownThread)
   initBT();
   almostDecentLog(this, "Almost decently initialized");
   m_internal->m_state = ScaleState::ready;
+  setTareCallback([this]() {
+    this->m_internal->btTareCallback();
+  });
 }
 
 void AlmostDecentScale::calibration()

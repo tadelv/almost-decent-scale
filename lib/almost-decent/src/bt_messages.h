@@ -17,5 +17,4 @@ enum BT_Message : unsigned char
   WEIGHT_CHANGE = 0xCA // do not use or send, has been discontinued
 };
 
-
 #endif

@@ -12,7 +12,7 @@ void scaleLog(const char *message) {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting NimBLE Server");
+  Serial.println("Starting scale");
   scale.m_logCallback = scaleLog;
   scale.begin();
   if (scale.getState() == ScaleState::error) {

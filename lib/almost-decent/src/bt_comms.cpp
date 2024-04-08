@@ -12,7 +12,13 @@
 
 static NimBLEServer *pServer;
 
+std::function<void()> tareCallback = nullptr;
+
 static int count = 1;
+
+void setTareCallback(std::function<void()> callback) {
+  tareCallback = callback;
+}
 
 class ServerCallbacks : public NimBLEServerCallbacks
 {
@@ -141,7 +147,7 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
       return;
     }
     const uint8_t *data = val.data();
-    switch (data[2]) {
+    switch (data[1]) {
       case BT_Command::LED:
         Serial.print("LED CMD");
         break;
@@ -150,11 +156,14 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
         break;
       case BT_Command::TARE:
         Serial.print("TARE CMD");
+        if (tareCallback) {
+          tareCallback();
+        }
         break;
     }
     char payload[3];
-    payload[0] = data[3];
-    payload[1] = data[4];
+    payload[0] = data[2];
+    payload[1] = data[3];
     payload[2] = '\0';
     Serial.print(": ");
     printHex(payload);
@@ -231,7 +240,6 @@ void broadcastWeight(int gramsMultipliedByTen) {
 
   weightCharacteristic->setValue(message);
   if (weightCharacteristic->getSubscribedCount() > 0) {
-    Serial.println("notifying");
     weightCharacteristic->notify();
   }
   
