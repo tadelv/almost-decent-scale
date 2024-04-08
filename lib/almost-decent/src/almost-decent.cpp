@@ -65,7 +65,7 @@ AlmostDecentScale::AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin)
   m_internal->m_sckPin = loadCellSckPin; 
 }
 
-void AlmostDecentScale::begin(bool ownThread) 
+void AlmostDecentScale::initialize(bool ownThread) 
 {
   almostDecentLog(this, "initializing");
   bool success = m_internal->beginScale();
@@ -80,6 +80,15 @@ void AlmostDecentScale::begin(bool ownThread)
   setTareCallback([this]() {
     this->m_internal->btTareCallback();
   });
+}
+
+void AlmostDecentScale::begin()
+{
+  if (m_internal->m_state != ScaleState::ready) {
+    almostDecentLog(this, "Scale not ready!");
+    return;
+  }
+  m_internal->m_state = ScaleState::measuring;
 }
 
 void AlmostDecentScale::calibration()
