@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include <almost-decent.h>
 
-const int LOADCELL_DOUT_PIN = 20;
-const int LOADCELL_SCK_PIN = 19;
-
 AlmostDecentScale scale(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
 void scaleLog(const char *message) {
@@ -41,5 +38,4 @@ void loop() {
   }
   scale.tick();
   delay(100);
-
 }
