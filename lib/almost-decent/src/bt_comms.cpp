@@ -13,11 +13,22 @@
 static NimBLEServer *pServer;
 
 std::function<void()> tareCallback = nullptr;
+std::function<void()> calibrateCallback = nullptr;
+std::function<void(float)> factorCallback = nullptr;
 
 static int count = 1;
 
 void setTareCallback(std::function<void()> callback) {
   tareCallback = callback;
+}
+
+void setCalibrateCallback(std::function<void()> callback) {
+  calibrateCallback = callback;
+}
+
+void setFactorCallback(std::function<void(float)> callback)
+{
+  factorCallback = callback;
 }
 
 class ServerCallbacks : public NimBLEServerCallbacks
@@ -70,13 +81,13 @@ void printHex(const char *str, bool endline = true)
 /** Handler class for characteristic actions */
 class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
 {
-  void onRead(NimBLECharacteristic *pCharacteristic)
-  {
-    Serial.print(pCharacteristic->getUUID().toString().c_str());
-    Serial.print(": onRead(), value: ");
-    Serial.println(pCharacteristic->getValue().c_str());
-    pCharacteristic->setValue(count++);
-  };
+  // void onRead(NimBLECharacteristic *pCharacteristic)
+  // {
+  //   Serial.print(pCharacteristic->getUUID().toString().c_str());
+  //   Serial.print(": onRead(), value: ");
+  //   Serial.println(pCharacteristic->getValue().c_str());
+  //   // pCharacteristic->setValue(count++);
+  // };
 
   void onWrite(NimBLECharacteristic *pCharacteristic)
   {
@@ -143,7 +154,7 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
     NimBLEAttValue val = pCharacteristic->getValue();
     printHex(val.c_str());
 
-    if (val.length() < 4 || val.data()[0] != DecentHeader) {
+    if (val.data()[0] != DecentHeader) {
       return;
     }
     const uint8_t *data = val.data();
@@ -160,13 +171,33 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
           tareCallback();
         }
         break;
+      case BT_CommandExtended::CALIBRATE:
+        if (calibrateCallback) {
+          calibrateCallback();
+        }
+        break;
+      case BT_CommandExtended::FACTOR_SET:
+        if (val.length() < 6) {
+          break;
+        }
+        {
+          uint32_t i32 = data[5] | (data[4] << 8) | (data[3] << 16) | (data[2] << 24);
+          if (factorCallback)
+          {
+            Serial.printf("setting factor: %d/1000\n", i32);
+            factorCallback(i32 / 1000.f);
+        }
+        }
+        break;
     }
-    char payload[3];
-    payload[0] = data[2];
-    payload[1] = data[3];
-    payload[2] = '\0';
-    Serial.print(": ");
-    printHex(payload);
+    if (val.length() > 4) {
+      char payload[3];
+      payload[0] = data[2];
+      payload[1] = data[3];
+      payload[2] = '\0';
+      Serial.print(": ");
+      printHex(payload);
+    }
   };
 };
 
@@ -243,4 +274,23 @@ void broadcastWeight(int gramsMultipliedByTen) {
     weightCharacteristic->notify();
   }
   
+}
+
+void broadCastUnits(int unitsTimesThousand)
+{
+  NimBLEService *scaleService = pServer->getServiceByUUID("FFF0");
+  if (scaleService == NULL)
+  {
+    Serial.println("No service running, aborting");
+    return;
+  }
+
+  NimBLECharacteristic *writeCharacteristic = scaleService->getCharacteristic("36F5");
+
+  if (writeCharacteristic == NULL)
+  {
+    Serial.println("No weight characteristic found, aborting");
+    return;
+  }
+  writeCharacteristic->setValue(unitsTimesThousand);
 }

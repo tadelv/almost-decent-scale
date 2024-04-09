@@ -17,4 +17,10 @@ enum BT_Message : unsigned char
   WEIGHT_CHANGE = 0xCA // do not use or send, has been discontinued
 };
 
+enum BT_CommandExtended : unsigned char
+{
+  CALIBRATE = 0xF1,
+  FACTOR_SET = 0xF2
+};
+
 #endif

@@ -80,11 +80,20 @@ void AlmostDecentScale::initialize(bool ownThread)
   setTareCallback([this]() {
     this->m_internal->btTareCallback();
   });
+  setCalibrateCallback([this]() {
+    this->calibration();
+  });
+  setFactorCallback([this] (float newFactor) {
+    almostDecentLog(this, "setting new factor");
+    this->setFactor(newFactor);
+  });
 }
 
 void AlmostDecentScale::begin()
 {
-  if (m_internal->m_state != ScaleState::ready) {
+  if (m_internal->m_state != ScaleState::measuring ||
+      m_internal->m_state != ScaleState::ready)
+  {
     almostDecentLog(this, "Scale not ready!");
     return;
   }
@@ -93,17 +102,18 @@ void AlmostDecentScale::begin()
 
 void AlmostDecentScale::calibration()
 {
-  almostDecentLog(this, "starting calibration, please wait for tare");
+  almostDecentLog(this, "starting calibration, please remove all weights and wait for tare");
   m_internal->m_state = ScaleState::calibrating;
   m_internal->m_scale.set_scale();
   delay(5000);
   m_internal->m_scale.tare(100);
   delay(1000);
-  almostDecentLog(this, "add a known weight");
-  delay(5000);
-  float units = m_internal->m_scale.get_units(10);
+  almostDecentLog(this, "add a known weight (10s)");
+  delay(10000);
+  float units = m_internal->m_scale.get_units(50);
   char msg[50];
   snprintf(msg, 49, "units value is: %f", units);
+  broadCastUnits(units * 1000);
   almostDecentLog(this, msg);
   delay(2000);
   almostDecentLog(this, "waiting for set factor (units/known_weight)");
@@ -112,9 +122,9 @@ void AlmostDecentScale::calibration()
 void AlmostDecentScale::setFactor(float factor)
 {
   m_internal->m_scale.set_scale(factor);
-  if (m_internal->m_state != ScaleState::calibrating) {
-    return;
-  }
+  // if (m_internal->m_state != ScaleState::calibrating) {
+  //   return;
+  // }
   almostDecentLog(this, "calibration done, ready to measure");
   m_internal->m_state = ScaleState::measuring;
 }

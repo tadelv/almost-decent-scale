@@ -5,6 +5,9 @@
 
 void initBT();
 void broadcastWeight(int gramsMultipliedByTen);
+void broadCastUnits(int unitsTimesThousand);
 void setTareCallback(std::function<void()>);
+void setCalibrateCallback(std::function<void()> callback);
+void setFactorCallback(std::function<void(float)> callback);
 
 #endif
