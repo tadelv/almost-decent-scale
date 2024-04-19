@@ -7,8 +7,11 @@
 #include "bt_messages.h"
 
 #include <HX711.h>
+#include <mutex>
 
 // https://decentespresso.com/decentscale_api
+
+std::mutex serial_mtx;
 
 class AlmostDecent_ {
   public:
@@ -19,14 +22,26 @@ class AlmostDecent_ {
 
   int beginScale() {
     m_scale.begin(m_doutPin, m_sckPin);
-    return m_scale.wait_ready_retry(3, 1000);
+    pinMode(m_sckPin, OUTPUT_OPEN_DRAIN);
+    bool success = m_scale.wait_ready_retry(5, 1000);
+    m_scale.set_scale();
+    m_scale.power_up();
+    success = m_scale.wait_ready_retry(5, 1000);
+    Serial.printf("scale init: %d\n", success);
+    return success;
   }
 
   void btTareCallback() {
-    if (m_scale.is_ready() == false) {
+    if (m_scale.wait_ready_timeout(500UL) == false) {
+      Serial.println("scale not ready");
       return;
     }
+    std::lock_guard<std::mutex> lck(serial_mtx);
+    ScaleState prevState = m_state;
+    m_state = ScaleState::taring;
+    Serial.println("taring internal");
     m_scale.tare();
+    m_state = prevState;
   }
 };
 
@@ -76,9 +91,9 @@ void AlmostDecentScale::initialize(bool ownThread)
   }
   initBT();
   almostDecentLog(this, "Almost decently initialized");
-  m_internal->m_state = ScaleState::ready;
   setTareCallback([this]() {
-    this->m_internal->btTareCallback();
+    almostDecentLog(this, "taring");
+    this->tare();
   });
   setCalibrateCallback([this]() {
     this->calibration();
@@ -87,11 +102,21 @@ void AlmostDecentScale::initialize(bool ownThread)
     almostDecentLog(this, "setting new factor");
     this->setFactor(newFactor);
   });
+  m_internal->m_state = ScaleState::ready;
+}
+
+void AlmostDecentScale::tare()
+{
+  almostDecentLog(this, "taring");
+  m_internal->btTareCallback();
 }
 
 void AlmostDecentScale::begin()
 {
-  if (m_internal->m_state != ScaleState::measuring ||
+  char msg[50];
+  snprintf(msg, 50, "scale state: %d", m_internal->m_state);
+  almostDecentLog(this, msg);
+  if (m_internal->m_state != ScaleState::measuring &&
       m_internal->m_state != ScaleState::ready)
   {
     almostDecentLog(this, "Scale not ready!");
@@ -131,6 +156,7 @@ void AlmostDecentScale::setFactor(float factor)
 
 void AlmostDecentScale::tick()
 {
+  std::lock_guard<std::mutex> lck(serial_mtx);
   ScaleState currentState = getState();
   switch (currentState)
   {

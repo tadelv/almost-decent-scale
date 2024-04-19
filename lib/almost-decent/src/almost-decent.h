@@ -9,6 +9,7 @@ enum ScaleState : unsigned char
   ready,
   calibrating,
   measuring,
+  taring,
   error
 };
 
@@ -26,6 +27,7 @@ class AlmostDecentScale {
   void tick(); // not using own thread
   void calibration();
   void setFactor(float factor);
+  void tare();
 };
 
 

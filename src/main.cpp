@@ -43,8 +43,10 @@ void loop() {
       case 'f':
         Serial.println("enter scale factor");
         while (Serial.available() == 0) {};
-        String factorString = Serial.readString();
+        String factorString = Serial.readStringUntil('\n');
+        Serial.printf("reading is: %s\n", factorString.c_str());
         float factorFloat = factorString.toFloat();
+        Serial.printf("factor is: %f\n", factorFloat);
         if (factorFloat == 0)
         {
           break;
