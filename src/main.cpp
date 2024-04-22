@@ -41,6 +41,7 @@ void loop() {
         scale.calibration();
         break;
       case 'f':
+      {
         Serial.println("enter scale factor");
         while (Serial.available() == 0) {};
         String factorString = Serial.readStringUntil('\n');
@@ -55,6 +56,10 @@ void loop() {
         Serial.println("saving factor for next time");
         storage.writeFloat(0, factorFloat);
         storage.commit();
+      }
+        break;
+      case 't':
+        scale.tare();
         break;
     }
   }
