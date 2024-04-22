@@ -22,6 +22,7 @@ class AlmostDecentScale {
   AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin);
   std::function<void(const char *)> m_logCallback = nullptr;
   ScaleState getState();
+  const char *getStateString();
   void initialize(bool ownThread = true); // creates own thread for processing
   void begin(); // starts measuring
   void tick(); // not using own thread

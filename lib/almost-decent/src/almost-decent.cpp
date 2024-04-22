@@ -22,24 +22,23 @@ class AlmostDecent_ {
 
   int beginScale() {
     m_scale.begin(m_doutPin, m_sckPin);
-    pinMode(m_sckPin, OUTPUT_OPEN_DRAIN);
     bool success = m_scale.wait_ready_retry(5, 1000);
     m_scale.set_scale();
     m_scale.power_up();
     success = m_scale.wait_ready_retry(5, 1000);
-    Serial.printf("scale init: %d\n", success);
+    DEBUG_SERIAL.printf("scale init: %d\n", success);
     return success;
   }
 
   void btTareCallback() {
     if (m_scale.wait_ready_timeout(500UL) == false) {
-      Serial.println("scale not ready");
+      DEBUG_SERIAL.println("scale not ready");
       return;
     }
     std::lock_guard<std::mutex> lck(serial_mtx);
     ScaleState prevState = m_state;
     m_state = ScaleState::taring;
-    Serial.println("taring internal");
+    DEBUG_SERIAL.println("taring internal");
     m_scale.tare();
     m_state = prevState;
   }
@@ -122,6 +121,7 @@ void AlmostDecentScale::begin()
     almostDecentLog(this, "Scale not ready!");
     return;
   }
+  m_internal->m_scale.tare();
   m_internal->m_state = ScaleState::measuring;
 }
 
@@ -165,12 +165,12 @@ void AlmostDecentScale::tick()
     break;
   case ScaleState::measuring:
   {
+    float weight = m_internal->m_scale.get_units(5);
     long currentMillis = millis();
     if (currentMillis - m_internal->m_last_broadcast_millis < 100)
     {
       break;
     }
-    float weight = m_internal->m_scale.get_units(5);
     sendWeight((int)(weight * 10.f));
     m_internal->m_last_broadcast_millis = currentMillis;
   }
@@ -185,3 +185,23 @@ ScaleState AlmostDecentScale::getState()
   return m_internal->m_state;
 }
 
+const char *AlmostDecentScale::getStateString() 
+{
+  switch (m_internal->m_state)
+  {
+  case ScaleState::startup:
+    return "startup";
+  case ScaleState::ready:
+    return "ready";
+  case ScaleState::calibrating:
+    return "calibrating";
+  case ScaleState::measuring:
+    return "measuring";
+  case ScaleState::taring:
+    return "taring";
+  case ScaleState::error:
+    return "error";
+  default:
+    return "unknown";
+  }
+}

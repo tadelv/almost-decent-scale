@@ -1,3 +1,4 @@
+#ifdef BT_COMMS_NIMBLE
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include <NimBLEHIDDevice.h>
@@ -35,8 +36,8 @@ class ServerCallbacks : public NimBLEServerCallbacks
 {
   void onConnect(NimBLEServer *pServer)
   {
-    Serial.println("Client connected");
-    Serial.println("Multi-connect support: start advertising");
+    DEBUG_SERIAL.println("Client connected");
+    DEBUG_SERIAL.println("Multi-connect support: start advertising");
     NimBLEDevice::startAdvertising();
   };
   /** Alternative onConnect() method to extract details of the connection.
@@ -44,8 +45,8 @@ class ServerCallbacks : public NimBLEServerCallbacks
    */
   void onConnect(NimBLEServer *pServer, ble_gap_conn_desc *desc)
   {
-    Serial.print("Client address: ");
-    Serial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+    DEBUG_SERIAL.print("Client address: ");
+    DEBUG_SERIAL.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
     /** We can use the connection handle here to ask for different connection parameters.
      *  Args: connection handle, min connection interval, max connection interval
      *  latency, supervision timeout.
@@ -57,12 +58,12 @@ class ServerCallbacks : public NimBLEServerCallbacks
   };
   void onDisconnect(NimBLEServer *pServer)
   {
-    Serial.println("Client disconnected - start advertising");
+    DEBUG_SERIAL.println("Client disconnected - start advertising");
     NimBLEDevice::startAdvertising();
   };
   void onMTUChange(uint16_t MTU, ble_gap_conn_desc *desc)
   {
-    Serial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
+    DEBUG_SERIAL.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
   };
 };
 
@@ -83,16 +84,16 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
 {
   // void onRead(NimBLECharacteristic *pCharacteristic)
   // {
-  //   Serial.print(pCharacteristic->getUUID().toString().c_str());
-  //   Serial.print(": onRead(), value: ");
-  //   Serial.println(pCharacteristic->getValue().c_str());
+  //   DEBUG_SERIAL.print(pCharacteristic->getUUID().toString().c_str());
+  //   DEBUG_SERIAL.print(": onRead(), value: ");
+  //   DEBUG_SERIAL.println(pCharacteristic->getValue().c_str());
   //   // pCharacteristic->setValue(count++);
   // };
 
   void onWrite(NimBLECharacteristic *pCharacteristic)
   {
-    Serial.print(pCharacteristic->getUUID().toString().c_str());
-    Serial.print(": onWrite(), value: ");
+    DEBUG_SERIAL.print(pCharacteristic->getUUID().toString().c_str());
+    DEBUG_SERIAL.print(": onWrite(), value: ");
     printHex(pCharacteristic->getValue().c_str());
   };
   /** Called before notification or indication is sent,
@@ -100,7 +101,7 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
    */
   void onNotify(NimBLECharacteristic *pCharacteristic)
   {
-    // Serial.println("Sending notification to clients");
+    // DEBUG_SERIAL.println("Sending notification to clients");
   };
 
   /** The status returned in status is defined in NimBLECharacteristic.h.
@@ -114,7 +115,7 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
     str += code;
     str += ", ";
     str += NimBLEUtils::returnCodeToString(code);
-    // Serial.println(str);
+    // DEBUG_SERIAL.println(str);
   };
 
   void onSubscribe(NimBLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue)
@@ -141,7 +142,7 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
     }
     str += std::string(pCharacteristic->getUUID()).c_str();
 
-    Serial.println(str);
+    DEBUG_SERIAL.println(str);
   };
 };
 
@@ -149,8 +150,8 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
   void onWrite(NimBLECharacteristic *pCharacteristic)
   {
     // special write char handling
-    Serial.print(pCharacteristic->getUUID().toString().c_str());
-    Serial.print(": onWrite(), value: ");
+    DEBUG_SERIAL.print(pCharacteristic->getUUID().toString().c_str());
+    DEBUG_SERIAL.print(": onWrite(), value: ");
     NimBLEAttValue val = pCharacteristic->getValue();
     printHex(val.c_str());
 
@@ -160,13 +161,13 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
     const uint8_t *data = val.data();
     switch (data[1]) {
       case BT_Command::LED:
-        Serial.print("LED CMD");
+        DEBUG_SERIAL.print("LED CMD");
         break;
       case BT_Command::TIMER:
-        Serial.print("TIMER CMD");
+        DEBUG_SERIAL.print("TIMER CMD");
         break;
       case BT_Command::TARE:
-        Serial.print("TARE CMD");
+        DEBUG_SERIAL.print("TARE CMD");
         if (tareCallback) {
           tareCallback();
         }
@@ -184,7 +185,7 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
           uint32_t i32 = data[5] | (data[4] << 8) | (data[3] << 16) | (data[2] << 24);
           if (factorCallback)
           {
-            Serial.printf("setting factor: %d/1000\n", i32);
+            DEBUG_SERIAL.printf("setting factor: %d/1000\n", i32);
             factorCallback(i32 / 1000.f);
         }
         }
@@ -195,7 +196,7 @@ class WriteCharacteristicCallbacks : public CharacteristicCallbacks {
       payload[0] = data[2];
       payload[1] = data[3];
       payload[2] = '\0';
-      Serial.print(": ");
+      DEBUG_SERIAL.print(": ");
       printHex(payload);
     }
   };
@@ -245,21 +246,21 @@ void initBT()
   device.startServices();
   pAdvertising->start();
 
-  Serial.println("Advertising Started");
+  DEBUG_SERIAL.println("Advertising Started");
 }
 
 
 void broadcastWeight(int gramsMultipliedByTen) {
   NimBLEService *scaleService = pServer->getServiceByUUID("FFF0");
   if (scaleService == NULL) {
-    Serial.println("No service running, aborting");
+    DEBUG_SERIAL.println("No service running, aborting");
     return;
   }
 
   NimBLECharacteristic *weightCharacteristic = scaleService->getCharacteristic("FFF4");
 
   if (weightCharacteristic == NULL) {
-    Serial.println("No weight characteristic found, aborting");
+    DEBUG_SERIAL.println("No weight characteristic found, aborting");
     return;
   }
 
@@ -281,7 +282,7 @@ void broadCastUnits(int unitsTimesThousand)
   NimBLEService *scaleService = pServer->getServiceByUUID("FFF0");
   if (scaleService == NULL)
   {
-    Serial.println("No service running, aborting");
+    DEBUG_SERIAL.println("No service running, aborting");
     return;
   }
 
@@ -289,8 +290,9 @@ void broadCastUnits(int unitsTimesThousand)
 
   if (writeCharacteristic == NULL)
   {
-    Serial.println("No weight characteristic found, aborting");
+    DEBUG_SERIAL.println("No weight characteristic found, aborting");
     return;
   }
   writeCharacteristic->setValue(unitsTimesThousand);
 }
+#endif //BT_COMMS_NIMBLE

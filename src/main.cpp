@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <almost-decent.h>
+#ifdef ESP32S3_SLOWDOWN
+#include "soc/rtc.h"
+#endif
+
 
 AlmostDecentScale scale(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
@@ -12,8 +16,19 @@ void scaleLog(const char *message) {
 }
 
 void setup() {
+  #ifdef ESP32S3_SLOWDOWN
+  setCpuFrequencyMhz(80);
+  yield();
+  #endif
+  
+  delay(2 * 1000);
   Serial.begin(115200);
   Serial.println("Starting scale");
+  #ifdef ESP32S3_SLOWDOWN
+  Serial.printf("cpufreq: %d\n", getCpuFrequencyMhz());
+  Serial.printf("apbfreq: %d\n", getApbFrequency());
+  Serial.printf("xtalfreq: %d\n", getXtalFrequencyMhz());
+  #endif
   scale.m_logCallback = scaleLog;
   scale.initialize();
   if (scale.getState() == ScaleState::error) {
@@ -23,13 +38,10 @@ void setup() {
 
   storage.begin(eepromSize);
   float factor = storage.readFloat(0);
-  if (factor == 0) {
-    Serial.println("Scale not calibrated yet.");
-    Serial.println("Press 'c' to start calibration.");
-    return;
-  }
+  Serial.printf("stored factor: %f\n", factor);
   scale.setFactor(factor);
   scale.begin();
+  Serial.printf("scale state: %s\n", scale.getStateString());
 }
 
 void loop() {
