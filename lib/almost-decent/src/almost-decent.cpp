@@ -138,7 +138,7 @@ void AlmostDecentScale::calibration()
   float units = m_internal->m_scale.get_units(50);
   char msg[50];
   snprintf(msg, 49, "units value is: %f", units);
-  broadCastUnits(units * 1000);
+  broadCastUnits(units * 1000.f);
   almostDecentLog(this, msg);
   delay(2000);
   almostDecentLog(this, "waiting for set factor (units/known_weight)");
@@ -171,7 +171,7 @@ void AlmostDecentScale::tick()
       break;
     }
     float weight = m_internal->m_scale.get_units(5);
-    sendWeight((int)weight * 10);
+    sendWeight((int)(weight * 10.f));
     m_internal->m_last_broadcast_millis = currentMillis;
   }
   break;
