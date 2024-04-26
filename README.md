@@ -7,6 +7,19 @@ Work in progress, a clone of [decent scale](https://decentespresso.com/decentsca
 - HX711
 - Load cell
 
+## Calibrating over Bluetooth:
+
+The scale supports calibrating over bluetooth. To calibrate the scale, send the `0x03F1` command to `36F5` which will activate the calibration mode.
+
+Once in calibration, the process is the same as when calibrating over Serial port.
+- remove all weights and wait for the scale to tare (7 seconds)
+- add a known weight
+- read the value from the weight characteristic `FFF4`
+- calculate the factor: (units_read_from_char / known_weight)
+- write `0x03F2XXXXXXXX` to `36F5` where XX is the uint32 representation of the factor multiplied by 1000
+- scale should be calibrated now
+
+
 ## TODO:
 
 - conform to DE scale BT protocol (tare, led, version, etc) ✔️ looks ok
