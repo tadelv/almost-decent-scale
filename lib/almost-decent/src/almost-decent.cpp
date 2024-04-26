@@ -67,9 +67,10 @@ void sendWeight(int gramsMultipliedByTen) {
 }
 
 void almostDecentLog(AlmostDecentScale *scale, const char *message){
-    if (scale->m_logCallback) {
-      scale->m_logCallback(message);
+    if (!scale->m_logCallback) {
+      return;
     }
+    scale->m_logCallback(message);
 }
 
 AlmostDecentScale::AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin)
@@ -167,12 +168,18 @@ void AlmostDecentScale::tick()
     break;
   case ScaleState::measuring:
   {
-    float weight = m_internal->m_scale.get_units(5);
+    float weight = m_internal->m_scale.get_units(1);
     long currentMillis = millis();
-    if (currentMillis - m_internal->m_last_broadcast_millis < broadcastIntervalMillis)
+    long timeDelta = currentMillis - m_internal->m_last_broadcast_millis;
+    if (timeDelta < broadcastIntervalMillis)
     {
       break;
     }
+    #ifdef DEBUG
+    char msg[50];
+    snprintf(msg, 49, "time delta: %d\n", timeDelta);
+    almostDecentLog(this, msg);
+    #endif
     sendWeight((int)(weight * 10.f));
     m_internal->m_last_broadcast_millis = currentMillis;
   }
