@@ -76,5 +76,5 @@ void loop() {
     }
   }
   scale.tick();
-  delay(100);
+  delay(10);
 }

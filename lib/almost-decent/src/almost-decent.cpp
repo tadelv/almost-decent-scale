@@ -154,6 +154,8 @@ void AlmostDecentScale::setFactor(float factor)
   m_internal->m_state = ScaleState::measuring;
 }
 
+const int broadcastIntervalMillis = 50;
+
 void AlmostDecentScale::tick()
 {
   std::lock_guard<std::mutex> lck(serial_mtx);
@@ -167,7 +169,7 @@ void AlmostDecentScale::tick()
   {
     float weight = m_internal->m_scale.get_units(5);
     long currentMillis = millis();
-    if (currentMillis - m_internal->m_last_broadcast_millis < 100)
+    if (currentMillis - m_internal->m_last_broadcast_millis < broadcastIntervalMillis)
     {
       break;
     }
