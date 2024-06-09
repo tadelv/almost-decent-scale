@@ -1,3 +1,9 @@
 [submodule "boards"]
 	path = boards
 	url = https://github.com/rzeldent/platformio-espressif32-sunton.git
+[submodule "designs/fillets"]
+	path = designs/fillets
+	url = https://github.com/ademuri/openscad-fillets.git
+[submodule "designs/threads"]
+	path = designs/threads
+	url = https://github.com/rcolyer/threads-scad.git
