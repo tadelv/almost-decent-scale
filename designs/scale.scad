@@ -3,8 +3,9 @@ use <fillets/fillets2d.scad>;
 use <threads/threads.scad>;
 
 diameter=2.5;
-boxWidth=70;
+boxWidth=75;
 wallThickness=2;
+loadCellLength=45;
 
 //base();
 //loadCell();
@@ -28,13 +29,16 @@ module bottom_cover() {
 difference() {
     union() {
         cover();
-        translate([4.5, boxWidth - 20, 0]) {
+        diagonal = sqrt(loadCellLength*loadCellLength);
+        mountPointXPos=boxWidth/2 - diagonal;
+        mountPointYPos=boxWidth/2 + diagonal;
+        translate([mountPointXPos, mountPointYPos, 0]) {
             color("#f0f")
             topFillet(t=3,r=4,s=40)
             linear_extrude(height=2)
             rounding2d(5)
             fillet2d(5)
-            square(16);
+            square(16, center=true);
         }
     }
     translate([15, boxWidth - 15, 0]) {
@@ -116,4 +120,21 @@ translate([connectionCenter, connectionCenter, 1]) {
             }
         }
 }
+espMove = wallThickness + 2;
+translate([espMove + 37.5 + 10, espMove - 2, 2])
+rotate(90)
+//translate([-25, -20, 0])
+%esp32s3mini();
+translate([boxWidth - 25, boxWidth - 40, 2])
+hx711();
+}
+
+module esp32s3mini() {
+    color("#f0f")
+    cube([26.5, 37.5, 5]);
+} 
+
+module hx711() {
+    color("#0f2")
+    cube([22.5, 30.2, 3]);
 }
