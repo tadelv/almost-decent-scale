@@ -26,12 +26,12 @@ internals();
 }
 
 module bottom_cover() {
+diagonal = sqrt(loadCellLength*loadCellLength)*0.5;
+mountPointXPos=boxWidth/2 - diagonal;
+mountPointYPos=boxWidth/2 + diagonal;
 difference() {
     union() {
-        cover();
-        diagonal = sqrt(loadCellLength*loadCellLength);
-        mountPointXPos=boxWidth/2 - diagonal;
-        mountPointYPos=boxWidth/2 + diagonal;
+        cover();        
         translate([mountPointXPos, mountPointYPos, 0]) {
             color("#f0f")
             topFillet(t=3,r=4,s=40)
@@ -41,13 +41,14 @@ difference() {
             square(16, center=true);
         }
     }
-    translate([15, boxWidth - 15, 0]) {
+    holeOffset = -4.5;
+    translate([mountPointXPos, mountPointYPos, 0]) {
         rotate(45) {
-    translate([0, -0.75, -1]) {
+    translate([0, holeOffset, -1]) {
         cylinder(2, d=diameter + 1, true, $fn=30);
                     #screwPoint(5);
                 }
-                translate([0, -0.75 + 7.5, -1]) {
+                translate([0, holeOffset + 7.5, -1]) {
                     cylinder(2, d=diameter + 1, true, $fn=30);
                     #screwPoint(5);
                 }
