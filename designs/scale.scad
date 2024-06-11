@@ -127,7 +127,7 @@ rotate(90)
 //translate([-25, -20, 0])
 %esp32s3mini();
 translate([boxWidth - 25, boxWidth - 40, 2])
-hx711();
+%hx711();
 }
 
 module esp32s3mini() {
