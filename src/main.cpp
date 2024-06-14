@@ -15,6 +15,12 @@ void scaleLog(const char *message) {
   LOGSerial.printf("[scale]: %s\n", message);
 }
 
+void saveScaleFactor(float factor) {
+  LOGSerial.printf("saving factor %.5f for next time\n", factor);
+  storage.writeFloat(0, factor);
+  storage.commit();
+}
+
 void setup() {
   #ifdef ESP32S3_SLOWDOWN
   setCpuFrequencyMhz(80);
@@ -30,6 +36,7 @@ void setup() {
   LOGSerial.printf("xtalfreq: %d\n", getXtalFrequencyMhz());
   #endif
   scale.m_logCallback = scaleLog;
+  scale.m_factorCallback = saveScaleFactor;
   scale.initialize();
   if (scale.getState() == ScaleState::error) {
     LOGSerial.println("failed to init scale ... will not continue");
@@ -65,9 +72,6 @@ void loop() {
           break;
         }
         scale.setFactor(factorFloat);
-        LOGSerial.println("saving factor for next time");
-        storage.writeFloat(0, factorFloat);
-        storage.commit();
       }
         break;
       case 't':

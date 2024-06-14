@@ -151,6 +151,9 @@ void AlmostDecentScale::setFactor(float factor)
   // if (m_internal->m_state != ScaleState::calibrating) {
   //   return;
   // }
+  if (m_factorCallback) {
+    m_factorCallback(factor);
+  }
   almostDecentLog(this, "calibration done, ready to measure");
   m_internal->m_state = ScaleState::measuring;
 }
