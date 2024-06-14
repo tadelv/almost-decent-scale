@@ -2,8 +2,8 @@ use <fillets/fillets3d.scad>;
 use <fillets/fillets2d.scad>;
 use <threads/threads.scad>;
 
-diameter=2.5;
-boxWidth=75;
+diameter=2.7;
+boxWidth=80;
 wallThickness=2;
 loadCellLength=45;
 
@@ -31,7 +31,7 @@ mountPointXPos=boxWidth/2 - diagonal;
 mountPointYPos=boxWidth/2 + diagonal;
 difference() {
     union() {
-        cover();        
+        cover(z=1.5);        
         translate([mountPointXPos, mountPointYPos, 0]) {
             color("#f0f")
             topFillet(t=3,r=4,s=40)
