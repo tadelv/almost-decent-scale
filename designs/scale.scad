@@ -1,8 +1,11 @@
 use <fillets/fillets3d.scad>;
 use <fillets/fillets2d.scad>;
+use <chamfers/Chamfer.scad>;
 use <threads/threads.scad>;
 
-diameter=2.7;
+$fn=45;
+
+diameter=4;
 boxWidth=80;
 wallThickness=2;
 loadCellLength=45;
@@ -11,10 +14,26 @@ loadCellLength=45;
 //loadCell();
 //internals();
 //top_cover();
-#bottom_cover();
+bottom_cover();
 %internals();
 
-translate([boxWidth + 30, 0, 0]) {
+
+module support() {
+    translate([-5,0,0])
+    rotate([0,-90,0])
+    translate([3,0,0])
+    hull()
+    {
+        translate([2,2,0]) sphere(r=0.5);
+        translate([-2,2,0]) sphere(r=0.5);
+        translate([-2,-2,0]) sphere(r=1.5);
+        translate([2,26,0]) sphere(r=0.5);
+        translate([-2,30,0]) sphere(r=1.5);
+    }
+}
+
+
+%translate([boxWidth + 30, 0, 0]) {
     top_cover();
 }
 
@@ -31,26 +50,34 @@ mountPointXPos=boxWidth/2 - diagonal;
 mountPointYPos=boxWidth/2 + diagonal;
 difference() {
     union() {
-        cover(z=1.5);        
-        translate([mountPointXPos, mountPointYPos, 0]) {
+//        cover(z=1.5);
+        chamferCube([boxWidth, boxWidth,1.5]);
+        translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
             color("#f0f")
-            topFillet(t=3,r=4,s=40)
-            linear_extrude(height=2)
+            topFillet(t=4,r=4,s=40)
+            linear_extrude(height=4)
             rounding2d(5)
             fillet2d(5)
             square(16, center=true);
+            translate([11,-15,0.5])
+            rotate(45)
+            support();
+            translate([22,-4,0.5])
+            rotate(45)
+            support();
         }
     }
     holeOffset = -4.5;
+    counterHoleDiameter = diameter+1.5;//diameter + 1.5;
     translate([mountPointXPos, mountPointYPos, 0]) {
         rotate(45) {
-    translate([0, holeOffset, -1]) {
-        cylinder(2, d=diameter + 1, true, $fn=30);
-                    #screwPoint(5);
+    translate([0, holeOffset, 0]) {
+    cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
+                    screwPoint(15);
                 }
-                translate([0, holeOffset + 7.5, -1]) {
-                    cylinder(2, d=diameter + 1, true, $fn=30);
-                    #screwPoint(5);
+                translate([0, holeOffset + 7.5, 0]) {
+                cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
+                    screwPoint(15);
                 }
                 }
     }
@@ -76,8 +103,8 @@ module loadCell() {
 }
 
 module screwPoint(height=12) {
-    ScrewThread(diameter, height)
-    cylinder(height, d=1);
+    ScrewThread(diameter+0.5, height)
+    cylinder(height, d=2);
 }
 
 module base() {
@@ -90,6 +117,7 @@ difference() {
 }
 
 module cover(x=boxWidth, z=1) {
+// topBottomFillet(t=1.5,b=0,r=0.5,s=10)
     linear_extrude(height=z)
     rounding2d(5)
     fillet2d(5)

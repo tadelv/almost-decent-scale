@@ -7,3 +7,6 @@
 [submodule "designs/threads"]
 	path = designs/threads
 	url = https://github.com/rcolyer/threads-scad.git
+[submodule "designs/chamfers"]
+	path = designs/chamfers
+	url = https://github.com/SebiTimeWaster/Chamfers-for-OpenSCAD.git
