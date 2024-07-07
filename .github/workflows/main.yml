@@ -32,3 +32,10 @@ jobs:
 
       - name: Build PlatformIO Project
         run: pio run -e ${{ github.event.inputs.board }}
+
+      - name: Save firmware file
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: .pio/build/${{ github.event.inputs.board }}/firmware.elf
+          
