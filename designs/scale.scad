@@ -14,8 +14,9 @@ loadCellLength=45;
 //loadCell();
 //internals();
 //top_cover();
-%bottom_cover();
-%internals();
+bottom_cover();
+//%internals();
+#%top_cover_inverted();
 
 
 module support() {
@@ -32,9 +33,7 @@ module support() {
     }
 }
 
-
 translate([boxWidth + 30, 0, 0]) {
-    top_cover();
         top_cover();
 }
 
@@ -49,7 +48,7 @@ module top_cover_inverted() {
 
 module top_cover() {
 base();
-internals();
+#internals();
 }
 
 module bottom_cover() {
@@ -161,11 +160,11 @@ translate([connectionCenter, connectionCenter, 1]) {
     translate([0,0,0])
     difference() {
 //        topFillet(t=2,r=3,s=30)
-        translate([0,2,0])
+        translate([0,1,0])
         hull() {
             cube([11,15, 0.1], center = true);
             translate([0,0,2])
-            cube([9,12,1], center = true);
+            cube([9,13,1], center = true);
             translate([0, 20, 0])
             cube([2, 20, 0.1], center = true);
         }
@@ -182,14 +181,26 @@ translate([connectionCenter, connectionCenter, 1]) {
 espMove = wallThickness + 2;
 translate([espMove + 37.5 + 10, espMove, 2])
 rotate(90) {
-    %esp32s3mini();
-    translate([-3, 38,-1])
-    hull() {
-        cube([3, 2, 5]);
-        translate([30, 0, 0])
-        cube([1, 2, 0.1]);
+    #%esp32s3mini();
+    translate([-espMove, 36,-1])
+    difference() {
+        hull() {
+            cube([1, 2, 5]);
+            translate([30, 0, 0])
+            cube([1, 2, 5]);
+            translate([33,0,0])
+            cube([1, 2, 0.1]); 
+            translate([2,5,0])
+            cube([20,10,0.1]);
+        }
+        translate([4,1,1])
+        hull() {
+            sphere(d=3);
+            translate([26,0,0])
+            sphere(d=3);
+        }
     }
-    translate([-3, -3,-1])
+    translate([-espMove, -2,-1])
     hull() {
         cube([5, 2, 5]);
         translate([15,0,0])
