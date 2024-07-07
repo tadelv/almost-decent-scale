@@ -200,7 +200,7 @@ rotate(90) {
             sphere(d=3);
         }
     }
-    translate([-espMove, -1,-1])
+    translate([-espMove, -1.25,-1])
     hull() {
         cube([5, 2, 5]);
         translate([15,0,0])
