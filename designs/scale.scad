@@ -168,11 +168,11 @@ translate([connectionCenter, connectionCenter, 1]) {
             translate([0, 20, 0])
             cube([2, 20, 0.1], center = true);
         }
-        translate([0, 4 - 6, 1]) {
-            #screwPoint(3);
+        translate([0, 4 - 6, 0.3]) {
+            #screwPoint(10);
         }
-            translate([0, 11.5 - 6, 1]) {
-            #screwPoint(3);
+            translate([0, 11.5 - 6, 0.3]) {
+            #screwPoint(10);
         }
     }
 }
@@ -200,7 +200,7 @@ rotate(90) {
             sphere(d=3);
         }
     }
-    translate([-espMove, -2,-1])
+    translate([-espMove, -1,-1])
     hull() {
         cube([5, 2, 5]);
         translate([15,0,0])
@@ -212,12 +212,19 @@ rotate(90) {
 translate([boxWidth - 25, boxWidth - 40, 2]) {
 %hx711();
         translate([2.5,2.5,-2])
+        color("#f00")
         cylinder(r1=2,r2=1.5, h=4);
+        
         translate([2.5,27.7,-2])
+        color("#ff0")
         cylinder(r1=2,r2=1.5, h=4);
+
         translate([20,27.7,-2])
+        color("#f0f")
         cylinder(r1=2,r2=1.5, h=4);
-        translate([20,2.5,-2])
+        
+        translate([20,2.25,-2])
+        color("#0ff")
         cylinder(r1=2,r2=1.5, h=4);
 }
 }
