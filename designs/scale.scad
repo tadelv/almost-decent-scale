@@ -35,8 +35,16 @@ module support() {
 
 translate([boxWidth + 30, 0, 0]) {
     top_cover();
+        top_cover();
 }
 
+module top_cover_inverted() {
+    translate([boxWidth, boxWidth, 14]) {
+        rotate([0,180,90]) {
+            top_cover();
+        }
+    }
+}
 
 
 module top_cover() {
@@ -73,11 +81,11 @@ difference() {
         rotate(45) {
     translate([0, holeOffset, 0]) {
     cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    screwPoint(15);
+                    #screwPoint(15);
                 }
                 translate([0, holeOffset + 7.5, 0]) {
                 cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    screwPoint(15);
+                    #screwPoint(15);
                 }
                 }
     }
@@ -129,24 +137,43 @@ module internals() {
 connectionCenter=boxWidth/2;// - 5.5; //- (12.1 /2);
 
 translate([connectionCenter, connectionCenter, 1]) {
-    rotate(a=45) {
+    #%rotate(a=45) {
         color("#f00")
-        difference() {
-            topFillet(t=3,r=2,s=30) {
-                translate([-5.5, -7.5, 0]) {
-                    cube([11, 18, 3], center=false);
-                }
-            }
-            translate([0, 4 - 6, 1]) {
-                #screwPoint(3);
-            }
-            translate([0, 11.5 - 6, 1]) {
-                #screwPoint(3);
-            }
-        }
+//        difference() {
+//            topFillet(t=3,r=2,s=30) {
+//                translate([-5.5, -7.5, 0]) {
+//                    cube([11, 18, 3], center=false);
+//                }
+//            }
+//            translate([0, 4 - 6, 1]) {
+//                #screwPoint(3);
+//            }
+//            translate([0, 11.5 - 6, 1]) {
+//                #screwPoint(3);
+//            }
+//        }
         color("#0f0")
         translate([-4.5, -6, 3]) {
-            %loadCell();
+            #%loadCell();
+        }
+    }
+    rotate(45)
+    translate([0,0,0])
+    difference() {
+//        topFillet(t=2,r=3,s=30)
+        translate([0,2,0])
+        hull() {
+            cube([11,15, 0.1], center = true);
+            translate([0,0,2])
+            cube([9,12,1], center = true);
+            translate([0, 20, 0])
+            cube([2, 20, 0.1], center = true);
+        }
+        translate([0, 4 - 6, 1]) {
+            #screwPoint(3);
+        }
+            translate([0, 11.5 - 6, 1]) {
+            #screwPoint(3);
         }
     }
 }
