@@ -15,7 +15,8 @@ loadCellLength=45;
 //internals();
 //top_cover();
 bottom_cover();
-%internals();
+//%internals();
+#%top_cover_inverted();
 
 
 module support() {
@@ -32,16 +33,22 @@ module support() {
     }
 }
 
-
-%translate([boxWidth + 30, 0, 0]) {
-    top_cover();
+translate([boxWidth + 30, 0, 0]) {
+        top_cover();
 }
 
+module top_cover_inverted() {
+    translate([boxWidth, boxWidth, 14]) {
+        rotate([0,180,90]) {
+            top_cover();
+        }
+    }
+}
 
 
 module top_cover() {
 base();
-internals();
+#internals();
 }
 
 module bottom_cover() {
@@ -50,8 +57,8 @@ mountPointXPos=boxWidth/2 - diagonal;
 mountPointYPos=boxWidth/2 + diagonal;
 difference() {
     union() {
-//        cover(z=1.5);
-        chamferCube([boxWidth, boxWidth,1.5]);
+        topBottomFillet(t=1.5,b=0,r=1,s=30)
+        cover(z=1.5);
         translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
             color("#f0f")
             topFillet(t=4,r=4,s=40)
@@ -73,11 +80,11 @@ difference() {
         rotate(45) {
     translate([0, holeOffset, 0]) {
     cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    screwPoint(15);
+                    #screwPoint(15);
                 }
                 translate([0, holeOffset + 7.5, 0]) {
                 cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    screwPoint(15);
+                    #screwPoint(15);
                 }
                 }
     }
@@ -103,12 +110,13 @@ module loadCell() {
 }
 
 module screwPoint(height=12) {
-    ScrewThread(diameter+0.5, height)
+    ScrewThread(diameter, height)
     cylinder(height, d=2);
 }
 
 module base() {
 difference() {
+        topBottomFillet(t=10, b=0,r=1,s=30)
         cover(z=10);
         translate([2, 2, 1]) {
             cover(boxWidth - 2*wallThickness, 10);
@@ -128,34 +136,97 @@ module internals() {
 connectionCenter=boxWidth/2;// - 5.5; //- (12.1 /2);
 
 translate([connectionCenter, connectionCenter, 1]) {
-        rotate(a=45) {
-            color("#f00")
-            difference() {
-                topFillet(t=3,r=2,s=40) {
-                    translate([-5.5, -7.5, 0]) {
-                        cube([11, 18, 3], center=false);
-                    }
-                }
-                translate([0, 4 - 6, 1]) {
-                    #screwPoint(3);
-                }
-                translate([0, 11.5 - 6, 1]) {
-                    #screwPoint(3);
-                }
-            }
-            color("#0f0")
-            translate([-4.5, -6, 3]) {
-                %loadCell();
-            }
+    #%rotate(a=45) {
+        color("#f00")
+//        difference() {
+//            topFillet(t=3,r=2,s=30) {
+//                translate([-5.5, -7.5, 0]) {
+//                    cube([11, 18, 3], center=false);
+//                }
+//            }
+//            translate([0, 4 - 6, 1]) {
+//                #screwPoint(3);
+//            }
+//            translate([0, 11.5 - 6, 1]) {
+//                #screwPoint(3);
+//            }
+//        }
+        color("#0f0")
+        translate([-4.5, -6, 3]) {
+            #%loadCell();
         }
+    }
+    rotate(45)
+    translate([0,0,0])
+    difference() {
+//        topFillet(t=2,r=3,s=30)
+        translate([0,1,0])
+        hull() {
+            cube([11,15, 0.1], center = true);
+            translate([0,0,2])
+            cube([9,13,1], center = true);
+            translate([0, 20, 0])
+            cube([2, 20, 0.1], center = true);
+        }
+        translate([0, 4 - 6, 0.3]) {
+            #screwPoint(10);
+        }
+            translate([0, 11.5 - 6, 0.3]) {
+            #screwPoint(10);
+        }
+    }
 }
+
+// esp32s3 connection
 espMove = wallThickness + 2;
-translate([espMove + 37.5 + 10, espMove - 2, 2])
-rotate(90)
-//translate([-25, -20, 0])
-%esp32s3mini();
-translate([boxWidth - 25, boxWidth - 40, 2])
+translate([espMove + 37.5 + 10, espMove, 2])
+rotate(90) {
+    #%esp32s3mini();
+    translate([-espMove, 36,-1])
+    difference() {
+        hull() {
+            cube([1, 2, 5]);
+            translate([30, 0, 0])
+            cube([1, 2, 5]);
+            translate([33,0,0])
+            cube([1, 2, 0.1]); 
+            translate([2,5,0])
+            cube([20,10,0.1]);
+        }
+        translate([4,1,1])
+        hull() {
+            sphere(d=3);
+            translate([26,0,0])
+            sphere(d=3);
+        }
+    }
+    translate([-espMove, -1.25,-1])
+    hull() {
+        cube([5, 2, 5]);
+        translate([15,0,0])
+        cube([1, 2, 0.1]);
+    }
+}
+
+// hx711 connection
+translate([boxWidth - 25, boxWidth - 40, 2]) {
 %hx711();
+        translate([2.5,2.5,-2])
+        color("#f00")
+        cylinder(r1=2,r2=1.5, h=4);
+        
+        translate([2.5,27.7,-2])
+        color("#ff0")
+        cylinder(r1=2,r2=1.5, h=4);
+
+        translate([20,27.7,-2])
+        color("#f0f")
+        cylinder(r1=2,r2=1.5, h=4);
+        
+        translate([20,2.25,-2])
+        color("#0ff")
+        cylinder(r1=2,r2=1.5, h=4);
+}
 }
 
 module esp32s3mini() {
@@ -164,6 +235,16 @@ module esp32s3mini() {
 } 
 
 module hx711() {
-    color("#0f2")
-    cube([22.5, 30.2, 3]);
+    difference() {
+        color("#0f2")
+        cube([22.5, 30.2, 3]);
+        translate([2.5,2.5,0])
+        cylinder(r=1.9, h=4);
+        translate([2.5,27.7,0])
+        cylinder(r=1.9, h=4);
+        translate([20,27.7,0])
+        cylinder(r=1.9, h=4);
+        translate([20,2.5,0])
+        cylinder(r=1.9, h=4);
+    }
 }
