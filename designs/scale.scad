@@ -14,7 +14,7 @@ loadCellLength=45;
 //loadCell();
 //internals();
 //top_cover();
-bottom_cover();
+%bottom_cover();
 %internals();
 
 
@@ -33,7 +33,7 @@ module support() {
 }
 
 
-%translate([boxWidth + 30, 0, 0]) {
+translate([boxWidth + 30, 0, 0]) {
     top_cover();
 }
 
@@ -50,8 +50,8 @@ mountPointXPos=boxWidth/2 - diagonal;
 mountPointYPos=boxWidth/2 + diagonal;
 difference() {
     union() {
-//        cover(z=1.5);
-        chamferCube([boxWidth, boxWidth,1.5]);
+        topBottomFillet(t=1.5,b=0,r=1,s=30)
+        cover(z=1.5);
         translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
             color("#f0f")
             topFillet(t=4,r=4,s=40)
@@ -103,12 +103,13 @@ module loadCell() {
 }
 
 module screwPoint(height=12) {
-    ScrewThread(diameter+0.5, height)
+    ScrewThread(diameter, height)
     cylinder(height, d=2);
 }
 
 module base() {
 difference() {
+        topBottomFillet(t=10, b=0,r=1,s=30)
         cover(z=10);
         translate([2, 2, 1]) {
             cover(boxWidth - 2*wallThickness, 10);
@@ -128,34 +129,59 @@ module internals() {
 connectionCenter=boxWidth/2;// - 5.5; //- (12.1 /2);
 
 translate([connectionCenter, connectionCenter, 1]) {
-        rotate(a=45) {
-            color("#f00")
-            difference() {
-                topFillet(t=3,r=2,s=40) {
-                    translate([-5.5, -7.5, 0]) {
-                        cube([11, 18, 3], center=false);
-                    }
-                }
-                translate([0, 4 - 6, 1]) {
-                    #screwPoint(3);
-                }
-                translate([0, 11.5 - 6, 1]) {
-                    #screwPoint(3);
+    rotate(a=45) {
+        color("#f00")
+        difference() {
+            topFillet(t=3,r=2,s=30) {
+                translate([-5.5, -7.5, 0]) {
+                    cube([11, 18, 3], center=false);
                 }
             }
-            color("#0f0")
-            translate([-4.5, -6, 3]) {
-                %loadCell();
+            translate([0, 4 - 6, 1]) {
+                #screwPoint(3);
+            }
+            translate([0, 11.5 - 6, 1]) {
+                #screwPoint(3);
             }
         }
+        color("#0f0")
+        translate([-4.5, -6, 3]) {
+            %loadCell();
+        }
+    }
 }
+
+// esp32s3 connection
 espMove = wallThickness + 2;
-translate([espMove + 37.5 + 10, espMove - 2, 2])
-rotate(90)
-//translate([-25, -20, 0])
-%esp32s3mini();
-translate([boxWidth - 25, boxWidth - 40, 2])
+translate([espMove + 37.5 + 10, espMove, 2])
+rotate(90) {
+    %esp32s3mini();
+    translate([-3, 38,-1])
+    hull() {
+        cube([3, 2, 5]);
+        translate([30, 0, 0])
+        cube([1, 2, 0.1]);
+    }
+    translate([-3, -3,-1])
+    hull() {
+        cube([5, 2, 5]);
+        translate([15,0,0])
+        cube([1, 2, 0.1]);
+    }
+}
+
+// hx711 connection
+translate([boxWidth - 25, boxWidth - 40, 2]) {
 %hx711();
+        translate([2.5,2.5,-2])
+        cylinder(r1=2,r2=1.5, h=4);
+        translate([2.5,27.7,-2])
+        cylinder(r1=2,r2=1.5, h=4);
+        translate([20,27.7,-2])
+        cylinder(r1=2,r2=1.5, h=4);
+        translate([20,2.5,-2])
+        cylinder(r1=2,r2=1.5, h=4);
+}
 }
 
 module esp32s3mini() {
@@ -164,6 +190,16 @@ module esp32s3mini() {
 } 
 
 module hx711() {
-    color("#0f2")
-    cube([22.5, 30.2, 3]);
+    difference() {
+        color("#0f2")
+        cube([22.5, 30.2, 3]);
+        translate([2.5,2.5,0])
+        cylinder(r=1.9, h=4);
+        translate([2.5,27.7,0])
+        cylinder(r=1.9, h=4);
+        translate([20,27.7,0])
+        cylinder(r=1.9, h=4);
+        translate([20,2.5,0])
+        cylinder(r=1.9, h=4);
+    }
 }
