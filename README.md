@@ -7,6 +7,7 @@ Work in progress, a clone of [decent scale](https://decentespresso.com/decentsca
 - HX711
 - Load cell ([either 500g or 750g](https://www.aliexpress.com/item/32670225988.html)) - take care of screw location / orientation, this will affect your enclosure choice.
 - some M3 flathead and countersunk screws you probably have lying around
+- [M3 threaded inserts](https://www.aliexpress.com/item/1005002897983868.html) if you're going with the 500g design.
 
 ## Designs / Enclosures
 
