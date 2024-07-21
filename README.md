@@ -14,7 +14,7 @@ Work in progress, a clone of [decent scale](https://decentespresso.com/decentsca
 Currently, two enclosure designs are available in this repo. A build for esp32-s3-mini and a build for esp32, provided by [@randomcoffeesnob](https://github.com/randomcoffeesnob).
 The design for esp32-s3-mini is still under active development, while the esp32 and 500g load cell is ready to go!
 
-Pick the one you want, based on the equipment you have.
+Pick the one you want, based on the equipment you have. *But be wary, esp32-s3-mini design is really not finished yet!*
 
 ## Calibrating over Bluetooth:
 
