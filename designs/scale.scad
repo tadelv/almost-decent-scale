@@ -48,7 +48,10 @@ module top_cover_inverted() {
 
 module top_cover() {
 base();
-#internals();
+translate([0,0,1]) {
+    internals();
+}
+
 }
 
 module bottom_cover() {
@@ -118,8 +121,11 @@ module base() {
 difference() {
         topBottomFillet(t=10, b=0,r=1,s=30)
         cover(z=10);
-        translate([2, 2, 1]) {
+        translate([2, 2, 2]) {
             cover(boxWidth - 2*wallThickness, 10);
+        }
+        translate([boxWidth - wallThickness/2, 20, 10]) {
+            sphere(r=3);
         }
     }
 }
@@ -193,11 +199,11 @@ rotate(90) {
             translate([2,5,0])
             cube([20,10,0.1]);
         }
-        translate([4,1,1])
+        translate([4,1,2])
         hull() {
-            sphere(d=3);
+            sphere(d=4);
             translate([26,0,0])
-            sphere(d=3);
+            sphere(d=4);
         }
     }
     translate([-espMove, -1.25,-1])
@@ -206,6 +212,7 @@ rotate(90) {
         translate([15,0,0])
         cube([1, 2, 0.1]);
     }
+    
 }
 
 // hx711 connection
@@ -227,6 +234,50 @@ translate([boxWidth - 25, boxWidth - 40, 2]) {
         color("#0ff")
         cylinder(r1=2,r2=1.5, h=4);
 }
+
+// supports for strength
+    translate([connectionCenter, connectionCenter, 1]) {
+    topFilleting = 1;
+    cubeHeight = 1;
+     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+     hull() {
+        cube([1, 1, cubeHeight]);
+        translate([connectionCenter - wallThickness, connectionCenter - wallThickness -1, 0])
+        cube([1, 1, cubeHeight]);
+     }
+     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+     hull() {
+       cube([1, 1, cubeHeight]);
+       translate([0, connectionCenter - wallThickness -1, 0])
+       cube([1, 1, cubeHeight]);
+       
+     }
+     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+     hull() {
+       cube([1, 1, cubeHeight]);
+       translate([- connectionCenter + wallThickness, 0, 0])
+       cube([1, 1, cubeHeight]);
+       
+     }
+     
+     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+     hull() {
+       translate([2, 0, 0])
+       cube([1, 1, cubeHeight]);
+       translate([connectionCenter - wallThickness, - connectionCenter + wallThickness, 0])
+       cube([1, 1, cubeHeight]);
+       
+     }
+     
+     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+     hull() {
+       translate([0, 0, 0])
+       cube([1, 1, cubeHeight]);
+       translate([connectionCenter - wallThickness, 0, 0])
+       cube([1, 1, cubeHeight]);
+       
+     }
+    }
 }
 
 module esp32s3mini() {
