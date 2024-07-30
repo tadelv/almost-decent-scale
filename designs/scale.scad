@@ -6,8 +6,8 @@ use <threads/threads.scad>;
 $fn=45;
 
 diameter=4;
-boxWidth=80;
-wallThickness=2;
+boxWidth=86;
+wallThickness=3;
 loadCellLength=45;
 
 //base();
@@ -16,8 +16,22 @@ loadCellLength=45;
 //top_cover();
 bottom_cover();
 //%internals();
-#%top_cover_inverted();
+//#%top_cover_inverted();
+translate([boxWidth + 30, 0, 0]) {
+        top_cover();
+        //round_wall();
+}
 
+module round_wall(length = 20, height = 3) {
+    topBottomFillet(t = height, b = 0, s = 20, r = height/3)
+    rotate_extrude(angle = -90, convexity = 5) {
+        difference() {
+            square([length, height], center = false);
+            square([length - height, height]);
+            
+        }
+    }
+}
 
 module support() {
     translate([-5,0,0])
@@ -33,9 +47,7 @@ module support() {
     }
 }
 
-translate([boxWidth + 30, 0, 0]) {
-        top_cover();
-}
+
 
 module top_cover_inverted() {
     translate([boxWidth, boxWidth, 14]) {
@@ -47,25 +59,40 @@ module top_cover_inverted() {
 
 
 module top_cover() {
-base();
-translate([0,0,1]) {
-    internals();
+difference() {
+union() {
+#base();
+translate([0,0,3]) {
+    #internals();
 }
-
+}
+connectionCenter=boxWidth/2;
+translate([connectionCenter, connectionCenter, 1]) {
+    #rotate(a=45) {
+    translate([0, 4 - 6, 0]) {
+            #screwPoint(15);
+        }
+            translate([0, 11.5 - 6, 0]) {
+            #screwPoint(15);
+        }
+    }
+}
+}
 }
 
 module bottom_cover() {
 diagonal = sqrt(loadCellLength*loadCellLength)*0.5;
 mountPointXPos=boxWidth/2 - diagonal;
 mountPointYPos=boxWidth/2 + diagonal;
+height = 3;
 difference() {
     union() {
-        topBottomFillet(t=1.5,b=0,r=1,s=30)
-        cover(z=1.5);
+        topBottomFillet(t=height,b=0,r=1,s=30)
+        cover(z=height);
         translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
             color("#f0f")
-            topFillet(t=4,r=4,s=40)
-            linear_extrude(height=4)
+            topFillet(t=6,r=4,s=40)
+            linear_extrude(height=6)
             rounding2d(5)
             fillet2d(5)
             square(16, center=true);
@@ -76,6 +103,33 @@ difference() {
             rotate(45)
             support();
         }
+//        translate([diagonal / 4 , boxWidth - 15, 3]) {
+//          hull() {
+//            sphere(d = 4);
+//            translate([10, 10, 0])
+//            sphere(d = 4);
+//          }
+//        }
+
+        translate([0, boxWidth, 1]) {
+        round_wall(length = boxWidth * 0.8);
+        }
+        
+        translate([boxWidth, 0, 1]) {
+        rotate(180)
+        round_wall(length = boxWidth * 0.8);
+        }
+        
+        translate([0, 0, 1]) {
+        rotate(90)
+        round_wall(length = boxWidth * 0.8);
+        }
+        
+        translate([boxWidth, boxWidth, 1]) {
+        rotate(-90)
+        round_wall(length = boxWidth * 0.8);
+        }
+
     }
     holeOffset = -4.5;
     counterHoleDiameter = diameter+1.5;//diameter + 1.5;
@@ -119,15 +173,15 @@ module screwPoint(height=12) {
 
 module base() {
 difference() {
-        topBottomFillet(t=10, b=0,r=1,s=30)
-        cover(z=10);
-        translate([2, 2, 2]) {
+        topBottomFillet(t=12, b=0,r=1,s=30)
+        cover(z=12);
+        translate([wallThickness, wallThickness, wallThickness]) {
             cover(boxWidth - 2*wallThickness, 10);
         }
-        translate([boxWidth - wallThickness/2, 20, 10]) {
-            sphere(r=3);
+        translate([boxWidth - wallThickness/2, 16, 11]) {
+            sphere(r=wallThickness);
         }
-    }
+}
 }
 
 module cover(x=boxWidth, z=1) {
@@ -166,26 +220,50 @@ translate([connectionCenter, connectionCenter, 1]) {
     translate([0,0,0])
     difference() {
 //        topFillet(t=2,r=3,s=30)
-        translate([0,1,0])
+        translate([0,1,-1])
         hull() {
             cube([11,15, 0.1], center = true);
-            translate([0,0,2])
+            translate([0,0,3])
             cube([9,13,1], center = true);
             translate([0, 20, 0])
             cube([2, 20, 0.1], center = true);
         }
-        translate([0, 4 - 6, 0.3]) {
-            #screwPoint(10);
-        }
-            translate([0, 11.5 - 6, 0.3]) {
-            #screwPoint(10);
-        }
     }
+    
+    
+    
 }
+
+// warping prevention
+  entrench = -1;
+    translate([0, boxWidth, entrench]) {
+      round_wall();
+      round_wall(length = 50);
+    }
+    
+    rotate(90)
+    translate([0, 0, entrench]) {
+          round_wall(length = 70);
+    }
+    
+    translate([boxWidth * 1.21, connectionCenter * 1.5, entrench]) {
+rotate(248)    
+    round_wall(length = 55);
+    }
+    
+    translate([connectionCenter * 1.05, connectionCenter * 0.2, entrench])
+    rotate(190)
+    round_wall(length = 40);
+    
+    translate([connectionCenter * 1, connectionCenter * 2, entrench - 1]) {
+      rotate(-5)
+      round_wall(length = 40);
+    }
+    
 
 // esp32s3 connection
 espMove = wallThickness + 2;
-translate([espMove + 37.5 + 10, espMove, 2])
+translate([espMove + 37.5 + 12, espMove, 0])
 rotate(90) {
     #%esp32s3mini();
     translate([-espMove, 36,-1])
@@ -206,7 +284,7 @@ rotate(90) {
             sphere(d=4);
         }
     }
-    translate([-espMove, -1.25,-1])
+    translate([-espMove, -0.9,-1])
     hull() {
         cube([5, 2, 5]);
         translate([15,0,0])
@@ -216,7 +294,7 @@ rotate(90) {
 }
 
 // hx711 connection
-translate([boxWidth - 25, boxWidth - 40, 2]) {
+translate([boxWidth - 28, boxWidth - 45, 2]) {
 %hx711();
         translate([2.5,2.5,-2])
         color("#f00")
@@ -236,48 +314,48 @@ translate([boxWidth - 25, boxWidth - 40, 2]) {
 }
 
 // supports for strength
-    translate([connectionCenter, connectionCenter, 1]) {
-    topFilleting = 1;
-    cubeHeight = 1;
-     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-     hull() {
-        cube([1, 1, cubeHeight]);
-        translate([connectionCenter - wallThickness, connectionCenter - wallThickness -1, 0])
-        cube([1, 1, cubeHeight]);
-     }
-     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-     hull() {
-       cube([1, 1, cubeHeight]);
-       translate([0, connectionCenter - wallThickness -1, 0])
-       cube([1, 1, cubeHeight]);
-       
-     }
-     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-     hull() {
-       cube([1, 1, cubeHeight]);
-       translate([- connectionCenter + wallThickness, 0, 0])
-       cube([1, 1, cubeHeight]);
-       
-     }
-     
-     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-     hull() {
-       translate([2, 0, 0])
-       cube([1, 1, cubeHeight]);
-       translate([connectionCenter - wallThickness, - connectionCenter + wallThickness, 0])
-       cube([1, 1, cubeHeight]);
-       
-     }
-     
-     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-     hull() {
-       translate([0, 0, 0])
-       cube([1, 1, cubeHeight]);
-       translate([connectionCenter - wallThickness, 0, 0])
-       cube([1, 1, cubeHeight]);
-       
-     }
-    }
+//    translate([connectionCenter, connectionCenter, 1]) {
+//    topFilleting = 1;
+//    cubeHeight = 1;
+//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+//     hull() {
+//        cube([1, 1, cubeHeight]);
+//        translate([connectionCenter - wallThickness, connectionCenter - wallThickness -1, 0])
+//        cube([1, 1, cubeHeight]);
+//     }
+//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+//     hull() {
+//       cube([1, 1, cubeHeight]);
+//       translate([0, connectionCenter - wallThickness -1, 0])
+//       cube([1, 1, cubeHeight]);
+//       
+//     }
+//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+//     hull() {
+//       cube([1, 1, cubeHeight]);
+//       translate([- connectionCenter + wallThickness, 0, 0])
+//       cube([1, 1, cubeHeight]);
+//       
+//     }
+//     
+//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+//     hull() {
+//       translate([2, 0, 0])
+//       cube([1, 1, cubeHeight]);
+//       translate([connectionCenter - wallThickness, - connectionCenter + wallThickness, 0])
+//       cube([1, 1, cubeHeight]);
+//       
+//     }
+//     
+//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
+//     hull() {
+//       translate([0, 0, 0])
+//       cube([1, 1, cubeHeight]);
+//       translate([connectionCenter - wallThickness, 0, 0])
+//       cube([1, 1, cubeHeight]);
+//       
+//     }
+//    }
 }
 
 module esp32s3mini() {
