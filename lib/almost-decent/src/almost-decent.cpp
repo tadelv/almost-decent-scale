@@ -1,10 +1,10 @@
-#include <string>
-#include <sstream>
-#include <iomanip>
 #include "almost-decent.h"
-#include "bt_message_building.h"
 #include "bt_comms.h"
+#include "bt_message_building.h"
 #include "bt_messages.h"
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 #include <HX711.h>
 #include <mutex>
@@ -14,7 +14,7 @@
 std::mutex serial_mtx;
 
 class AlmostDecent_ {
-  public:
+public:
   ScaleState m_state = ScaleState::startup;
   int m_doutPin, m_sckPin;
   HX711 m_scale;
@@ -44,19 +44,19 @@ class AlmostDecent_ {
   }
 };
 
-void initBluetooth() {
-  initBT();
-}
+void initBluetooth() { initBT(); }
 
-std::string formatWeightWithTimestamp(int weight, int minutes, int seconds, int milliseconds)
-{
+std::string formatWeightWithTimestamp(int weight, int minutes, int seconds,
+                                      int milliseconds) {
 
-  std::vector<unsigned char> message = buildWeightMessage(weight, minutes, seconds, milliseconds);
+  std::vector<unsigned char> message =
+      buildWeightMessage(weight, minutes, seconds, milliseconds);
 
   std::stringstream stream;
 
   for (auto b : message) {
-    stream << std::uppercase << std::setw(2) << std::setfill('0') << std::hex << (int)b;
+    stream << std::uppercase << std::setw(2) << std::setfill('0') << std::hex
+           << (int)b;
   }
 
   return stream.str();
@@ -66,22 +66,20 @@ void sendWeight(int gramsMultipliedByTen) {
   broadcastWeight(gramsMultipliedByTen);
 }
 
-void almostDecentLog(AlmostDecentScale *scale, const char *message){
-    if (!scale->m_logCallback) {
-      return;
-    }
-    scale->m_logCallback(message);
+void almostDecentLog(AlmostDecentScale *scale, const char *message) {
+  if (!scale->m_logCallback) {
+    return;
+  }
+  scale->m_logCallback(message);
 }
 
-AlmostDecentScale::AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin)
-{
+AlmostDecentScale::AlmostDecentScale(int loadCellDoutPin, int loadCellSckPin) {
   m_internal = new AlmostDecent_();
   m_internal->m_doutPin = loadCellDoutPin;
-  m_internal->m_sckPin = loadCellSckPin; 
+  m_internal->m_sckPin = loadCellSckPin;
 }
 
-void AlmostDecentScale::initialize(bool ownThread) 
-{
+void AlmostDecentScale::initialize(bool ownThread) {
   almostDecentLog(this, "initializing");
   bool success = m_internal->beginScale();
   if (!success) {
@@ -95,58 +93,71 @@ void AlmostDecentScale::initialize(bool ownThread)
     almostDecentLog(this, "taring");
     this->tare();
   });
-  setCalibrateCallback([this]() {
-    this->calibration();
-  });
-  setFactorCallback([this] (float newFactor) {
+  setCalibrateCallback([this]() { this->calibration(); });
+  setFactorCallback([this](float newFactor) {
     almostDecentLog(this, "setting new factor");
     this->setFactor(newFactor);
   });
   m_internal->m_state = ScaleState::ready;
 }
 
-void AlmostDecentScale::tare()
-{
+void AlmostDecentScale::tare() {
   almostDecentLog(this, "taring");
   m_internal->btTareCallback();
 }
 
-void AlmostDecentScale::begin()
-{
+void AlmostDecentScale::begin() {
   char msg[50];
   snprintf(msg, 50, "scale state: %d", m_internal->m_state);
   almostDecentLog(this, msg);
   if (m_internal->m_state != ScaleState::measuring &&
-      m_internal->m_state != ScaleState::ready)
-  {
+      m_internal->m_state != ScaleState::ready) {
     almostDecentLog(this, "Scale not ready!");
     return;
   }
   m_internal->m_scale.tare();
   m_internal->m_state = ScaleState::measuring;
 }
-
-void AlmostDecentScale::calibration()
-{
-  almostDecentLog(this, "starting calibration, please remove all weights and wait for tare");
+void AlmostDecentScale::_calibration() {
+  almostDecentLog(
+      this,
+      "starting calibration, please remove all weights and wait for tare");
   m_internal->m_state = ScaleState::calibrating;
   m_internal->m_scale.set_scale();
-  delay(5000);
+  long currentMillis = millis();
+  /*while (millis() - currentMillis < 5000) {*/
+  /*  yield();*/
+  /*}*/
+	delay(5000);
   m_internal->m_scale.tare(100);
-  delay(1000);
+  currentMillis = millis();
+  /*while (millis() - currentMillis < 1000) {*/
+  /*  yield();*/
+  /*}*/
+	delay(1000);
   almostDecentLog(this, "add a known weight (10s)");
-  delay(10000);
+  currentMillis = millis();
+  /*while (millis() - currentMillis < 10000) {*/
+  /*  yield();*/
+  /*}*/
+	delay(10000);
+	
   float units = m_internal->m_scale.get_units(50);
   char msg[50];
   snprintf(msg, 49, "units value is: %f", units);
-  broadCastUnits(units * 1000.f);
+  broadCastUnits(units * 1000);
   almostDecentLog(this, msg);
-  delay(2000);
   almostDecentLog(this, "waiting for set factor (units/known_weight)");
 }
 
-void AlmostDecentScale::setFactor(float factor)
-{
+void AlmostDecentScale::calibration() {
+	xTaskCreate([](void *scale) {
+		((AlmostDecentScale *)scale)->_calibration();
+		vTaskDelete(NULL);
+	}, "calibration", 4096, this, 5, NULL);
+}
+
+void AlmostDecentScale::setFactor(float factor) {
   m_internal->m_scale.set_scale(factor);
   // if (m_internal->m_state != ScaleState::calibrating) {
   //   return;
@@ -160,47 +171,37 @@ void AlmostDecentScale::setFactor(float factor)
 
 const int broadcastIntervalMillis = 50;
 
-void AlmostDecentScale::tick()
-{
+void AlmostDecentScale::tick() {
   std::lock_guard<std::mutex> lck(serial_mtx);
   ScaleState currentState = getState();
-  switch (currentState)
-  {
+  switch (currentState) {
   case ScaleState::calibrating:
     /* calibration code */
     break;
-  case ScaleState::measuring:
-  {
+  case ScaleState::measuring: {
     float weight = m_internal->m_scale.get_units(1);
     long currentMillis = millis();
     long timeDelta = currentMillis - m_internal->m_last_broadcast_millis;
-    if (timeDelta < broadcastIntervalMillis)
-    {
+    if (timeDelta < broadcastIntervalMillis) {
       break;
     }
-    #ifdef DEBUG
+#ifdef DEBUG
     char msg[50];
     snprintf(msg, 49, "time delta: %d\n", timeDelta);
     almostDecentLog(this, msg);
-    #endif
+#endif
     sendWeight((int)(weight * 10.f));
     m_internal->m_last_broadcast_millis = currentMillis;
-  }
-  break;
+  } break;
   default:
     break;
   }
 }
 
-ScaleState AlmostDecentScale::getState()
-{
-  return m_internal->m_state;
-}
+ScaleState AlmostDecentScale::getState() { return m_internal->m_state; }
 
-const char *AlmostDecentScale::getStateString() 
-{
-  switch (m_internal->m_state)
-  {
+const char *AlmostDecentScale::getStateString() {
+  switch (m_internal->m_state) {
   case ScaleState::startup:
     return "startup";
   case ScaleState::ready:
