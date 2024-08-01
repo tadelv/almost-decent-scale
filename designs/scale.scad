@@ -50,7 +50,7 @@ module support() {
 
 
 module top_cover_inverted() {
-    translate([boxWidth, boxWidth, 14]) {
+    translate([boxWidth, boxWidth, 19]) {
         rotate([0,180,90]) {
             top_cover();
         }
@@ -65,6 +65,24 @@ union() {
 translate([0,0,3]) {
     #internals();
 }
+translate([0, boxWidth, 1]) {
+        round_wall(length = boxWidth * 0.8, height = 4);
+        }
+        
+        translate([boxWidth, 0, 1]) {
+        rotate(180)
+                round_wall(length = boxWidth * 0.8, height = 4);
+        }
+        
+        translate([0, 0, 1]) {
+        rotate(90)
+                round_wall(length = boxWidth * 0.8, height = 4);
+        }
+        
+        translate([boxWidth, boxWidth, 1]) {
+        rotate(-90)
+                round_wall(length = boxWidth * 0.8, height = 4);
+        }
 }
 connectionCenter=boxWidth/2;
 translate([connectionCenter, connectionCenter, 1]) {
@@ -81,71 +99,149 @@ translate([connectionCenter, connectionCenter, 1]) {
 }
 
 module bottom_cover() {
-diagonal = sqrt(loadCellLength*loadCellLength)*0.5;
-mountPointXPos=boxWidth/2 - diagonal;
-mountPointYPos=boxWidth/2 + diagonal;
-height = 3;
-difference() {
-    union() {
-        topBottomFillet(t=height,b=0,r=1,s=30)
-        cover(z=height);
-        translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
-            color("#f0f")
-            topFillet(t=6,r=4,s=40)
-            linear_extrude(height=6)
-            rounding2d(5)
-            fillet2d(5)
-            square(16, center=true);
-            translate([11,-15,0.5])
-            rotate(45)
-            support();
-            translate([22,-4,0.5])
-            rotate(45)
-            support();
-        }
-//        translate([diagonal / 4 , boxWidth - 15, 3]) {
-//          hull() {
-//            sphere(d = 4);
-//            translate([10, 10, 0])
-//            sphere(d = 4);
-//          }
-//        }
+    diagonal = sqrt(loadCellLength*loadCellLength)*0.5;
+    mountPointXPos=boxWidth/2 - diagonal;
+    mountPointYPos=boxWidth/2 + diagonal;
+    height = 3;
+    difference() {
+        union() {
+            topBottomFillet(t=height,b=0,r=1,s=30)
+            cover(z=height);
+            translate([mountPointXPos +0.5, mountPointYPos -0.5, 0]) {
+                color("#f0f")
+                topFillet(t=6,r=4,s=40)
+                linear_extrude(height=6)
+                rounding2d(5)
+                fillet2d(5)
+                square(16, center=true);
+                translate([11,-15,0.5])
+                rotate(45)
+                support();
+                translate([22,-4,0.5])
+                rotate(45)
+                support();
+            }
 
-        translate([0, boxWidth, 1]) {
-        round_wall(length = boxWidth * 0.8);
-        }
-        
-        translate([boxWidth, 0, 1]) {
-        rotate(180)
-        round_wall(length = boxWidth * 0.8);
-        }
-        
-        translate([0, 0, 1]) {
-        rotate(90)
-        round_wall(length = boxWidth * 0.8);
-        }
-        
-        translate([boxWidth, boxWidth, 1]) {
-        rotate(-90)
-        round_wall(length = boxWidth * 0.8);
+
+            translate([0, boxWidth, 1]) {
+            round_wall(length = boxWidth * 0.8);
+            }
+            
+            translate([boxWidth, 0, 1]) {
+            rotate(180)
+            round_wall(length = boxWidth * 0.8);
+            }
+            
+            translate([0, 0, 1]) {
+            rotate(90)
+            round_wall(length = boxWidth * 0.8);
+            }
+            
+            translate([boxWidth, boxWidth, 1]) {
+            rotate(-90)
+            round_wall(length = boxWidth * 0.8);
+            }
+            
+        #innerWall(height);
+
+            // esp32s3 connection
+        espMove = wallThickness + 2;
+        translate([espMove + 37.5 + 12, espMove, height])
+        rotate(90) {
+            #%esp32s3mini();
+            translate([-2, 36,-1])
+            difference() {
+                hull() {
+                    cube([1, 2, 5]);
+                    translate([30, 0, 0])
+                    cube([1, 2, 5]);
+                    translate([33,0,0])
+                    cube([1, 2, 0.1]); 
+                    translate([2,5,0])
+                    cube([20,10,0.1]);
+                }
+                translate([4,1,2])
+                hull() {
+                    sphere(d=4);
+                    translate([26,0,0])
+                    sphere(d=4);
+                }
+            }
+            translate([-1, -0.9,-1])
+            hull() {
+                cube([5, 2, 5]);
+                translate([15,0,0])
+                cube([1, 2, 0.1]);
+            }
+            
         }
 
-    }
-    holeOffset = -4.5;
-    counterHoleDiameter = diameter+1.5;//diameter + 1.5;
-    translate([mountPointXPos, mountPointYPos, 0]) {
-        rotate(45) {
-    translate([0, holeOffset, 0]) {
-    cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    #screwPoint(15);
-                }
-                translate([0, holeOffset + 7.5, 0]) {
-                cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
-                    #screwPoint(15);
-                }
-                }
-    }
+            // hx711 connection
+            rotate(45)
+            translate([boxWidth * 0.85, boxWidth * -0.15, 4.9]) {
+            %hx711();
+                footHeight = 5;
+                    translate([2.5,2.5,-2])
+                    color("#f00")
+                    cylinder(r1=2,r2=1.5, h=footHeight);
+                    
+                    translate([2.5,27.7,-2])
+                    color("#ff0")
+                    cylinder(r1=2,r2=1.5, h=footHeight);
+
+                    translate([20,27.7,-2])
+                    color("#f0f")
+                    cylinder(r1=2,r2=1.5, h=footHeight);
+                    
+                    translate([20,2.25,-2])
+                    color("#0ff")
+                    cylinder(r1=2,r2=1.5, h=footHeight);
+            }
+        }
+            holeOffset = -4.5;
+            counterHoleDiameter = diameter+1.5;//diameter + 1.5;
+            translate([mountPointXPos, mountPointYPos, 0]) {
+                rotate(45) {
+            translate([0, holeOffset, 0]) {
+            cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
+                            #screwPoint(15);
+                        }
+                        translate([0, holeOffset + 7.5, 0]) {
+                        cylinder(h=3, r1=(diameter+3)/2, r2=diameter/2);
+                            #screwPoint(15);
+                        }
+                        }
+            }
+
+
+        }
 }
+
+module innerWall(height) {
+    innerWallOffset = wallThickness * 1.2;
+    color("red")
+    
+    translate([innerWallOffset, innerWallOffset, 0])
+    difference() {
+    #topFillet(t = height * 3, r = 0.5, s = 30)
+    linear_extrude(height = height * 3)
+//    rounding2d(1.01)
+//        fillet2d(0.9)
+            fillet2d(5)
+            difference() {
+              rounding2d(2)
+              square(boxWidth - 2 * innerWallOffset);
+              translate([1, 1, 0])
+              rounding2d(1)
+              square(boxWidth - 2 * innerWallOffset - 2);
+            }
+      translate([boxWidth - innerWallOffset * 2.8, 16, height * 2.5]) {
+//            sphere(r=wallThickness * 1.2);
+    rotate([0,90,0])
+    #cylinder(h = 5, r = wallThickness * 1.2);
+        } 
+     }
+
 }
 
 module loadCell() { 
@@ -178,8 +274,10 @@ difference() {
         translate([wallThickness, wallThickness, wallThickness]) {
             cover(boxWidth - 2*wallThickness, 10);
         }
-        translate([boxWidth - wallThickness/2, 16, 11]) {
-            sphere(r=wallThickness);
+        translate([boxWidth - 19.5, -1, 12]) {
+//            sphere(r=wallThickness);
+rotate([0, 90, 90])
+cylinder(5, r = wallThickness * 1.2);
         }
 }
 }
@@ -187,175 +285,33 @@ difference() {
 module cover(x=boxWidth, z=1) {
 // topBottomFillet(t=1.5,b=0,r=0.5,s=10)
     linear_extrude(height=z)
-    rounding2d(5)
-    fillet2d(5)
+    rounding2d(2)
     square([x,x]);
 }
 
 module internals() {
-connectionCenter=boxWidth/2;// - 5.5; //- (12.1 /2);
+    connectionCenter=boxWidth/2;
 
-translate([connectionCenter, connectionCenter, 1]) {
-    #%rotate(a=45) {
-        color("#f00")
-//        difference() {
-//            topFillet(t=3,r=2,s=30) {
-//                translate([-5.5, -7.5, 0]) {
-//                    cube([11, 18, 3], center=false);
-//                }
-//            }
-//            translate([0, 4 - 6, 1]) {
-//                #screwPoint(3);
-//            }
-//            translate([0, 11.5 - 6, 1]) {
-//                #screwPoint(3);
-//            }
-//        }
-        color("#0f0")
-        translate([-4.5, -6, 3]) {
-            #%loadCell();
+    translate([connectionCenter, connectionCenter, 1]) {
+        #%rotate(a=45) {
+            color("#0f0")
+            translate([-4.5, -6, 3]) {
+                #%loadCell();
+            }
+        }
+        rotate(45)
+        translate([0,0,0])
+        difference() {
+            translate([0,1,-1])
+            hull() {
+                cube([11,15, 0.1], center = true);
+                translate([0,0,3])
+                cube([9,13,1], center = true);
+                translate([0, 20, 0])
+                cube([2, 20, 0.1], center = true);
+            }
         }
     }
-    rotate(45)
-    translate([0,0,0])
-    difference() {
-//        topFillet(t=2,r=3,s=30)
-        translate([0,1,-1])
-        hull() {
-            cube([11,15, 0.1], center = true);
-            translate([0,0,3])
-            cube([9,13,1], center = true);
-            translate([0, 20, 0])
-            cube([2, 20, 0.1], center = true);
-        }
-    }
-    
-    
-    
-}
-
-// warping prevention
-  entrench = -1;
-    translate([0, boxWidth, entrench]) {
-      round_wall();
-      round_wall(length = 50);
-    }
-    
-    rotate(90)
-    translate([0, 0, entrench]) {
-          round_wall(length = 70);
-    }
-    
-    translate([boxWidth * 1.21, connectionCenter * 1.5, entrench]) {
-rotate(248)    
-    round_wall(length = 55);
-    }
-    
-    translate([connectionCenter * 1.05, connectionCenter * 0.2, entrench])
-    rotate(190)
-    round_wall(length = 40);
-    
-    translate([connectionCenter * 1, connectionCenter * 2, entrench - 1]) {
-      rotate(-5)
-      round_wall(length = 40);
-    }
-    
-
-// esp32s3 connection
-espMove = wallThickness + 2;
-translate([espMove + 37.5 + 12, espMove, 0])
-rotate(90) {
-    #%esp32s3mini();
-    translate([-espMove, 36,-1])
-    difference() {
-        hull() {
-            cube([1, 2, 5]);
-            translate([30, 0, 0])
-            cube([1, 2, 5]);
-            translate([33,0,0])
-            cube([1, 2, 0.1]); 
-            translate([2,5,0])
-            cube([20,10,0.1]);
-        }
-        translate([4,1,2])
-        hull() {
-            sphere(d=4);
-            translate([26,0,0])
-            sphere(d=4);
-        }
-    }
-    translate([-espMove, -0.9,-1])
-    hull() {
-        cube([5, 2, 5]);
-        translate([15,0,0])
-        cube([1, 2, 0.1]);
-    }
-    
-}
-
-// hx711 connection
-translate([boxWidth - 28, boxWidth - 45, 2]) {
-%hx711();
-        translate([2.5,2.5,-2])
-        color("#f00")
-        cylinder(r1=2,r2=1.5, h=4);
-        
-        translate([2.5,27.7,-2])
-        color("#ff0")
-        cylinder(r1=2,r2=1.5, h=4);
-
-        translate([20,27.7,-2])
-        color("#f0f")
-        cylinder(r1=2,r2=1.5, h=4);
-        
-        translate([20,2.25,-2])
-        color("#0ff")
-        cylinder(r1=2,r2=1.5, h=4);
-}
-
-// supports for strength
-//    translate([connectionCenter, connectionCenter, 1]) {
-//    topFilleting = 1;
-//    cubeHeight = 1;
-//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-//     hull() {
-//        cube([1, 1, cubeHeight]);
-//        translate([connectionCenter - wallThickness, connectionCenter - wallThickness -1, 0])
-//        cube([1, 1, cubeHeight]);
-//     }
-//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-//     hull() {
-//       cube([1, 1, cubeHeight]);
-//       translate([0, connectionCenter - wallThickness -1, 0])
-//       cube([1, 1, cubeHeight]);
-//       
-//     }
-//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-//     hull() {
-//       cube([1, 1, cubeHeight]);
-//       translate([- connectionCenter + wallThickness, 0, 0])
-//       cube([1, 1, cubeHeight]);
-//       
-//     }
-//     
-//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-//     hull() {
-//       translate([2, 0, 0])
-//       cube([1, 1, cubeHeight]);
-//       translate([connectionCenter - wallThickness, - connectionCenter + wallThickness, 0])
-//       cube([1, 1, cubeHeight]);
-//       
-//     }
-//     
-//     topBottomFillet(t=topFilleting, b=-1,r=1,s=30)
-//     hull() {
-//       translate([0, 0, 0])
-//       cube([1, 1, cubeHeight]);
-//       translate([connectionCenter - wallThickness, 0, 0])
-//       cube([1, 1, cubeHeight]);
-//       
-//     }
-//    }
 }
 
 module esp32s3mini() {
