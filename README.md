@@ -23,9 +23,10 @@ The scale supports calibrating over bluetooth. To calibrate the scale, send the 
 Once in calibration, the process is the same as when calibrating over Serial port.
 - remove all weights and wait for the scale to tare (7 seconds)
 - add a known weight
-- read the value from the weight characteristic `FFF4`
+- read the value from the control characteristic `36F5`, I copy the value into calculator on macOS, use byteflip and
+change to decimal representation.
 - calculate the factor: (units_read_from_char / known_weight)
-- write `0x03F2XXXXXXXX` to `36F5` where XX is the uint32 representation of the factor multiplied by 1000 (i.e. `0x03F20000073A` for factor 1.85).
+- write `0x03F2XXXXXXXX` to `36F5` where XX is the uint32(hex) representation of the factor multiplied by 1000 (i.e. `0x03F20000073A` for factor 1.85). Make sure to pad the value with any leading zeroes you need.
 - scale should be calibrated now
 
 
