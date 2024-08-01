@@ -293,6 +293,7 @@ void broadCastUnits(int unitsTimesThousand)
     DEBUG_SERIAL.println("No weight characteristic found, aborting");
     return;
   }
-  writeCharacteristic->setValue(unitsTimesThousand);
+	DEBUG_SERIAL.printf("Sending value: %d\n", unitsTimesThousand);
+  writeCharacteristic->setValue((uint32_t)unitsTimesThousand);
 }
 #endif //BT_COMMS_NIMBLE
