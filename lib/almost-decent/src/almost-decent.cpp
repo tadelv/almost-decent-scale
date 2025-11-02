@@ -67,7 +67,7 @@ void sendWeight(int gramsMultipliedByTen) {
 }
 
 void almostDecentLog(AlmostDecentScale *scale, const char *message) {
-  if (!scale->m_logCallback) {
+  if (scale->m_logCallback == NULL) {
     return;
   }
   scale->m_logCallback(message);

@@ -2,6 +2,7 @@
 #define ALMOST_DECENT_H
 
 #include <functional>
+#include <string>
 
 enum ScaleState : unsigned char {
   startup,

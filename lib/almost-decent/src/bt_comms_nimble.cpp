@@ -1,3 +1,4 @@
+#include "NimBLEAdvertisementData.h"
 #ifdef BT_COMMS_NIMBLE
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
@@ -107,16 +108,16 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks
   /** The status returned in status is defined in NimBLECharacteristic.h.
    *  The value returned in code is the NimBLE host return code.
    */
-  void onStatus(NimBLECharacteristic *pCharacteristic, Status status, int code)
-  {
-    String str = ("Notification/Indication status code: ");
-    str += status;
-    str += ", return code: ";
-    str += code;
-    str += ", ";
-    str += NimBLEUtils::returnCodeToString(code);
-    // DEBUG_SERIAL.println(str);
-  };
+  // void onStatus(NimBLECharacteristic *pCharacteristic, Status status, int code)
+  // {
+  //   String str = ("Notification/Indication status code: ");
+  //   str += status;
+  //   str += ", return code: ";
+  //   str += code;
+  //   str += ", ";
+  //   str += NimBLEUtils::returnCodeToString(code);
+  //   // DEBUG_SERIAL.println(str);
+  // };
 
   void onSubscribe(NimBLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue)
   {
@@ -209,7 +210,7 @@ void initBT()
 {
   NimBLEDevice::init("Decent Scale");
 #ifdef ESP_PLATFORM
-  NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
+  NimBLEDevice::setPower(ESP_PWR_LVL_P18); /** +9db */
 #else
   NimBLEDevice::setPower(9); /** +9db */
 #endif
@@ -233,17 +234,25 @@ void initBT()
   
   weightCharacteristic->setCallbacks(&weightCharacteristicCallbacks);
   writeCharacteristic->setCallbacks(&writeCharacteristicCallbacks);
-  NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
 
   scaleService->start();
 
 
-  pAdvertising->addServiceUUID(scaleService->getUUID());
+  NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+  // pAdvertising->addServiceUUID("0000FFF0-0000-1000-8000-00805F9B34FB");
   
-  pAdvertising->setScanResponse(true);
-  NimBLEHIDDevice device(pServer);
-  device.pnp(3, 0xf0a, 0, 0x03);
-  device.startServices();
+  NimBLEAdvertisementData data; 
+  data.setName("Decent Scale");
+  data.addServiceUUID("FFF0");
+  // pAdvertising->addServiceUUID(scaleService->getUUID());
+  // pAdvertising->addServiceUUID("0000FFF0-0000-1000-8000-00805F9B34FB");
+  pAdvertising->addServiceUUID("FFF0");
+  // data.addTxPower();
+  // pAdvertising->setScanResponseData(data);
+  pAdvertising->enableScanResponse(true);
+  // NimBLEHIDDevice device(pServer);
+  // device.pnp(3, 0xf0a, 0, 0x03);
+  // device.startServices();
   pAdvertising->start();
 
   DEBUG_SERIAL.println("Advertising Started");
@@ -271,9 +280,9 @@ void broadcastWeight(int gramsMultipliedByTen) {
   std::vector<uint8_t> message = buildWeightMessage(gramsMultipliedByTen, minutes, seconds, milliseconds);
 
   weightCharacteristic->setValue(message);
-  if (weightCharacteristic->getSubscribedCount() > 0) {
+  // if (weightCharacteristic->subscribedCount() > 0) {
     weightCharacteristic->notify();
-  }
+  // }
   
 }
 
